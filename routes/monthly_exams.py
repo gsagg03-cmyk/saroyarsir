@@ -489,6 +489,11 @@ def get_comprehensive_monthly_ranking(exam_id):
                 rank['position_change'] = None
                 rank['position_trend'] = 'new'
         
+        # Filter out archived students from rankings before returning
+        # (in case any old data exists)
+        active_student_ids = [s.id for s in batch_students]
+        rankings = [r for r in rankings if r['user_id'] in active_student_ids]
+        
         # If student, only return their data and nearby rankings
         if current_user.role == UserRole.STUDENT:
             student_rank = next(
@@ -1540,7 +1545,7 @@ def delete_monthly_exam(exam_id):
     """Delete a monthly exam period and all associated data"""
     try:
         current_user = get_current_user()
-        monthly_exam = MonthlyExam.query.get(exam_id)
+        monthly_exam = db.session.get(MonthlyExam, exam_id)
         
         if not monthly_exam:
             return error_response('Monthly exam not found. It may have been already deleted.', 404)
