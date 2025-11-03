@@ -1539,7 +1539,10 @@ def delete_individual_exam(exam_id, individual_exam_id):
 def delete_monthly_exam(exam_id):
     """Delete a monthly exam period and all associated data"""
     try:
-        monthly_exam = MonthlyExam.query.get_or_404(exam_id)
+        monthly_exam = MonthlyExam.query.get(exam_id)
+        
+        if not monthly_exam:
+            return error_response('Monthly exam not found. It may have been already deleted.', 404)
         
         # Check if user has permission
         if current_user.role not in [UserRole.SUPER_USER, UserRole.TEACHER]:
