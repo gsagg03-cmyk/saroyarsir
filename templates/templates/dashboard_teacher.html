@@ -1036,6 +1036,10 @@ function attendanceManager() {
                 }
                 
                 console.log('Parsed students array:', students);
+                
+                // Filter out archived students (safeguard - backend should already filter)
+                students = students.filter(student => !student.is_archived && student.is_active !== false);
+                console.log('Active students after filtering:', students);
 
                 // Get existing attendance for the date
                 const attendanceResponse = await fetch(`/api/attendance?batch_id=${this.selectedBatchId}&date=${this.selectedDate}`, {
