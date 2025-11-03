@@ -341,7 +341,7 @@ def get_batch_students(batch_id):
         
         students = []
         for student in batch.students:
-            if student.is_active:
+            if student.is_active and not student.is_archived:
                 student_data = {
                     'id': student.id,
                     'phoneNumber': student.phoneNumber,  # Correct field name

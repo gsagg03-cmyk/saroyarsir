@@ -50,6 +50,7 @@ def create_app(config_name=None):
     from routes.monthly_exams import monthly_exams_bp
     from routes.debug import debug_bp
     from routes.documents import documents_bp
+    from routes.database import database_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(users_bp, url_prefix='/api/users')
@@ -68,6 +69,7 @@ def create_app(config_name=None):
     app.register_blueprint(monthly_exams_bp, url_prefix='/api/monthly-exams')
     app.register_blueprint(debug_bp, url_prefix='/api/debug')
     app.register_blueprint(documents_bp, url_prefix='/api/documents')
+    app.register_blueprint(database_bp, url_prefix='/api/database')
     
     # Register template routes
     from routes.templates import templates_bp
@@ -163,7 +165,7 @@ def create_app(config_name=None):
 
 if __name__ == '__main__':
     app = create_app()
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8001))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     
     print(f"Starting SmartGardenHub on port {port}")

@@ -146,6 +146,15 @@ function loginForm() {
                 if (response.ok) {
                     console.log('🎉 Login successful, user role:', data?.user?.role);
                     
+                    // Store user data in localStorage
+                    if (data.data && data.data.user) {
+                        console.log('💾 Storing user data:', data.data.user);
+                        localStorage.setItem('user', JSON.stringify(data.data.user));
+                    } else if (data.user) {
+                        console.log('💾 Storing user data:', data.user);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
+                    
                     // Reset form
                     this.formData = { phoneNumber: '', password: '' };
                     this.loginError = '';

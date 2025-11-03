@@ -65,6 +65,17 @@ def student_dashboard():
     
     return render_template('dashboard_student_new.html', user=session['user'])
 
+@templates_bp.route('/student-selection')
+def student_selection():
+    """Student selection page for shared parent accounts"""
+    if 'pending_students' not in session:
+        return redirect(url_for('templates.login_page'))
+    
+    students = session.get('pending_students', [])
+    phone = session.get('pending_phone', '')
+    
+    return render_template('student_selection.html', students=students, phone=phone)
+
 @templates_bp.route('/teacher')  
 def teacher_dashboard():
     """Teacher dashboard direct route"""

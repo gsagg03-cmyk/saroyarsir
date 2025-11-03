@@ -14,8 +14,8 @@ dashboard_bp = Blueprint('dashboard', __name__)
 def get_dashboard_stats():
     """Get dashboard statistics"""
     try:
-        # Get counts
-        total_students = User.query.filter_by(role=UserRole.STUDENT, is_active=True).count()
+        # Get counts (exclude archived students)
+        total_students = User.query.filter_by(role=UserRole.STUDENT, is_active=True, is_archived=False).count()
         total_teachers = User.query.filter_by(role=UserRole.TEACHER, is_active=True).count()
         total_batches = Batch.query.count()  # Get total count of all batches (active and inactive)
         
@@ -25,16 +25,16 @@ def get_dashboard_stats():
         # SMS count (placeholder for now - you can implement proper SMS tracking)
         sms_count = 0  # This would need proper SMS service integration
         
-        # Get recent students (last 5)
-        recent_students = User.query.filter_by(role=UserRole.STUDENT, is_active=True)\
+        # Get recent students (last 5, exclude archived)
+        recent_students = User.query.filter_by(role=UserRole.STUDENT, is_active=True, is_archived=False)\
                              .order_by(User.created_at.desc())\
                              .limit(5).all()
         
-        # Get all batches with student counts (for detailed data)
+        # Get all batches with student counts (for detailed data, exclude archived students)
         all_batches_data = []
         batches = Batch.query.all()  # Get all batches, not just active ones
         for batch in batches:
-            student_count = len([s for s in batch.students if s.role == UserRole.STUDENT and s.is_active])
+            student_count = len([s for s in batch.students if s.role == UserRole.STUDENT and s.is_active and not s.is_archived])
             all_batches_data.append({
                 'id': batch.id,
                 'name': batch.name,
@@ -92,10 +92,10 @@ def get_overview():
                 'batch_count': len(student_batches)
             }
         else:
-            # Teacher/Admin overview
+            # Teacher/Admin overview (exclude archived students)
             overview = {
                 'user_type': 'teacher',
-                'total_students': User.query.filter_by(role=UserRole.STUDENT, is_active=True).count(),
+                'total_students': User.query.filter_by(role=UserRole.STUDENT, is_active=True, is_archived=False).count(),
                 'total_batches': Batch.query.filter_by(is_active=True).count()
             }
         

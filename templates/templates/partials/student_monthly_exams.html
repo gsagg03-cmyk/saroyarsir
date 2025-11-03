@@ -1,357 +1,318 @@
-<!-- Student Monthly Exams - Read Only View -->
-<div class="bg-white shadow-lg rounded-lg p-6">
-    <!-- Exam List View -->
-    <div id="examListView">
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">📊 My Monthly Exams & Results</h2>
-            <p class="text-gray-600">View your monthly exam results and rankings (Read-Only)</p>
-        </div>
-
-        <div id="examsLoading" class="text-center py-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p class="text-gray-600">Loading exams...</p>
-        </div>
-
-        <div id="noBatchMessage" class="hidden text-center py-12 bg-blue-50 rounded-lg border border-blue-200">
-            <svg class="w-16 h-16 mx-auto mb-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <p class="text-gray-700 font-medium">No monthly exams available yet</p>
-            <p class="text-gray-500 text-sm mt-2">Your teacher will create exams soon</p>
-        </div>
-
-        <div id="examsContainer" class="hidden space-y-4"></div>
-    </div>
-
-    <!-- Exam Details View -->
-    <div id="examDetailsView" class="hidden">
-        <button onclick="studentMonthlyExams.backToList()" class="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Exams
-        </button>
-        <div id="examDetailsContent"></div>
+<div id="monthlyExamsContent" class="space-y-6">
+    <div class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600">Loading monthly exams...</p>
     </div>
 </div>
 
 <script>
-// Student Monthly Exams Module v2.0.1 - Build: 2025-10-22-19:30
-console.log('📊 Monthly Exams Module Loading v2.0.1');
-
 (function() {
-    var studentMonthlyExams = {
-        currentUser: null,
-        userBatchId: null,
-        currentStudentId: null,
+    let examsData = [];
+    let refreshInterval = null;
+    let isExpanded = {};
+    
+    async function loadExams() {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        console.log('📚 Student Monthly Exams - User data:', user);
         
-        init: function() {
-            console.log('studentMonthlyExams.init() called');
-            this.currentUser = {{ user|tojson if user else 'null' }};
-            if (this.currentUser && this.currentUser.id) {
-                this.currentStudentId = this.currentUser.id;
-                console.log('Current student ID:', this.currentStudentId);
-            }
-            console.log('Loading monthly exams directly (no batch check needed)...');
-            // Skip batch loading, go straight to exams
-            this.loadMonthlyExams();
-        },
+        let batches = user.batches || [];
         
-        loadUserBatches: function() {
-            var self = this;
-            console.log('========================================');
-            console.log('📚 LOADING USER BATCHES');
-            console.log('========================================');
-            console.log('Fetching user batches from /api/students/me/batches');
-            fetch('/api/students/me/batches')
-                .then(function(response) {
-                    console.log('Batches response status:', response.status);
-                    if (!response.ok) {
-                        console.error('❌ Batches request failed with status:', response.status);
-                    }
-                    return response.json();
-                })
-                .then(function(data) {
-                    console.log('📦 RAW Batches response:', JSON.stringify(data, null, 2));
-                    
-                    if (data.success && data.data && data.data.batches && data.data.batches.length > 0) {
-                        console.log('✅ Found', data.data.batches.length, 'batch(es)');
-                        self.userBatchId = data.data.batches[0].id;
-                        console.log('✅ Using batch ID:', self.userBatchId, '- Batch name:', data.data.batches[0].name);
-                        self.loadMonthlyExams();
-                    } else {
-                        console.log('❌ No batches found for user');
-                        console.log('   data.success:', data.success);
-                        console.log('   data.data:', data.data);
-                        console.log('   data.data.batches:', data.data ? data.data.batches : 'N/A');
-                        document.getElementById('examsLoading').classList.add('hidden');
-                        document.getElementById('noBatchMessage').classList.remove('hidden');
-                    }
-                    console.log('========================================');
-                })
-                .catch(function(error) {
-                    console.error('========================================');
-                    console.error('❌ ERROR loading batches:', error);
-                    console.error('========================================');
-                    document.getElementById('examsLoading').classList.add('hidden');
-                    document.getElementById('noBatchMessage').classList.remove('hidden');
-                });
-        },
+        if (!batches.length && user.allStudents && user.allStudents.length > 0) {
+            const firstStudent = user.allStudents[0];
+            batches = firstStudent.batches || [];
+        }
         
-        loadMonthlyExams: function() {
-            var self = this;
-            console.log('========================================');
-            console.log('📊 LOADING MONTHLY EXAMS');
-            console.log('========================================');
-            console.log('Current batch ID:', self.userBatchId);
-            console.log('Fetching monthly exams from /api/monthly-exams/');
-            fetch('/api/monthly-exams/')
-                .then(function(response) {
-                    console.log('Monthly exams response status:', response.status);
-                    if (!response.ok) {
-                        console.error('❌ Exams request failed with status:', response.status);
-                    }
-                    return response.json();
-                })
-                .then(function(data) {
-                    console.log('📦 RAW Monthly exams response:', JSON.stringify(data, null, 2));
-                    
-                    if (data.success && data.data) {
-                        // API returns data.data as the array of exams directly
-                        var myExams = Array.isArray(data.data) ? data.data : [];
-                        console.log('✅ API returned', myExams.length, 'total exams');
-                        
-                        // Log each exam
-                        myExams.forEach(function(exam, index) {
-                            console.log('  Exam', index + 1 + ':', exam.title, '- Batch ID:', exam.batch_id, '- Batch Name:', exam.batch_name);
-                        });
-                        
-                        // SHOW ALL EXAMS - Don't filter by batch
-                        // Students can see exams from all batches
-                        console.log('✅ Showing ALL exams (no batch filtering)');
-                        console.log('✅ Final exam count to display:', myExams.length);
-                        self.renderExams(myExams);
-                    } else {
-                        console.log('❌ No exams data in response');
-                        console.log('   data.success:', data.success);
-                        console.log('   data.data:', data.data);
-                        self.renderExams([]);
-                    }
-                    document.getElementById('examsLoading').classList.add('hidden');
-                    document.getElementById('examsContainer').classList.remove('hidden');
-                    console.log('========================================');
-                })
-                .catch(function(error) {
-                    console.error('========================================');
-                    console.error('❌ ERROR loading exams:', error);
-                    console.error('========================================');
-                    document.getElementById('examsLoading').classList.add('hidden');
-                    document.getElementById('examsContainer').classList.remove('hidden');
-                });
-        },
+        const container = document.getElementById('monthlyExamsContent');
         
-        renderExams: function(exams) {
-            var container = document.getElementById('examsContainer');
-            container.classList.remove('hidden');
-            
-            if (exams.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-gray-500">' +
-                    '<i class="fas fa-inbox text-4xl mb-3 text-gray-400"></i>' +
-                    '<p class="font-medium text-gray-700">No monthly exams available yet</p>' +
-                    '<p class="text-sm mt-2">Your teacher will create exams soon</p>' +
-                    '</div>';
-                return;
-            }
-            
-            console.log('Rendering', exams.length, 'exams');
-            var html = '';
-            for (var i = 0; i < exams.length; i++) {
-                var exam = exams[i];
-                html += '<div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">';
-                html += '<div class="flex justify-between items-start">';
-                html += '<div>';
-                html += '<h3 class="text-lg font-semibold text-gray-900">' + exam.title + '</h3>';
-                html += '<p class="text-sm text-gray-600 mt-1"><i class="fas fa-calendar mr-1"></i>' + exam.month_name + ' ' + exam.year + '</p>';
-                html += '<p class="text-sm text-gray-600"><i class="fas fa-users mr-1"></i>' + exam.batch_name + '</p>';
-                html += '</div>';
-                html += '<button onclick="studentMonthlyExams.viewExamDetails(' + exam.id + ')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">';
-                html += '<i class="fas fa-eye mr-2"></i>View Results';
-                html += '</button>';
-                html += '</div>';
-                html += '</div>';
-            }
-            container.innerHTML = html;
-            console.log('Exams rendered successfully');
-        },
+        if (!batches.length) {
+            container.innerHTML = '<div class="text-center py-12"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto"><p class="text-gray-700 font-medium mb-2">No batches assigned</p><p class="text-sm text-gray-600">Please contact your teacher to be assigned to a batch.</p></div></div>';
+            return;
+        }
         
-        viewExamDetails: function(examId) {
-            var self = this;
-            document.getElementById('examListView').classList.add('hidden');
-            document.getElementById('examDetailsView').classList.remove('hidden');
-            
-            var detailsContent = document.getElementById('examDetailsContent');
-            detailsContent.innerHTML = '<div class="text-center py-12"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div><p class="text-gray-600">Loading exam details...</p></div>';
-            
-            fetch('/api/monthly-exams/' + examId + '/comprehensive-ranking')
-                .then(function(response) { return response.json(); })
-                .then(function(data) {
-                    if (data.success && data.data) {
-                        self.renderExamDetails(data.data);
-                    } else {
-                        detailsContent.innerHTML = '<div class="text-center py-8 text-red-500"><p>Error loading exam details</p></div>';
-                    }
-                })
-                .catch(function(error) {
-                    console.error('Error:', error);
-                    detailsContent.innerHTML = '<div class="text-center py-8 text-red-500"><p>Error loading exam details</p></div>';
-                });
-        },
+        const batchId = batches[0].id;
         
-        renderExamDetails: function(data) {
-            var exam = data.exam;
-            var rankings = data.rankings || [];
-            var individualExams = data.individual_exams || [];
+        try {
+            const response = await fetch('/api/monthly-exams?batch_id=' + batchId);
+            const data = await response.json();
             
-            var myRank = rankings.find(function(r) { return r.student_id === studentMonthlyExams.currentStudentId; });
-            
-            var html = '<div class="space-y-6">';
-            
-            // Exam Header
-            html += '<div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">';
-            html += '<h2 class="text-2xl font-bold mb-2">' + exam.title + '</h2>';
-            html += '<p class="text-indigo-100"><i class="fas fa-calendar mr-2"></i>' + exam.month + '/' + exam.year + '</p>';
-            html += '<p class="text-indigo-100"><i class="fas fa-users mr-2"></i>' + exam.batch_name + '</p>';
-            html += '</div>';
-            
-            // My Performance Card
-            if (myRank) {
-                html += '<div class="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-6">';
-                html += '<h3 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-user-circle mr-2 text-green-600"></i>My Performance</h3>';
-                html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4">';
-                html += '<div class="text-center">';
-                html += '<p class="text-3xl font-bold text-indigo-600">' + myRank.rank + '</p>';
-                html += '<p class="text-sm text-gray-600">Rank</p>';
-                html += '</div>';
-                html += '<div class="text-center">';
-                html += '<p class="text-3xl font-bold text-green-600">' + myRank.percentage.toFixed(1) + '%</p>';
-                html += '<p class="text-sm text-gray-600">Score</p>';
-                html += '</div>';
-                html += '<div class="text-center">';
-                html += '<p class="text-3xl font-bold text-blue-600">' + myRank.total_marks + '/' + myRank.total_possible + '</p>';
-                html += '<p class="text-sm text-gray-600">Total Marks</p>';
-                html += '</div>';
-                html += '<div class="text-center">';
-                html += '<p class="text-3xl font-bold text-purple-600">' + myRank.attendance + '</p>';
-                html += '<p class="text-sm text-gray-600">Attendance</p>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
-            }
-            
-            // Rankings Table
-            html += '<div class="bg-white rounded-lg border border-gray-200">';
-            html += '<div class="p-4 border-b border-gray-200">';
-            html += '<h3 class="text-lg font-bold text-gray-800"><i class="fas fa-trophy mr-2 text-yellow-500"></i>Class Rankings</h3>';
-            html += '</div>';
-            html += '<div class="overflow-x-auto" style="max-height: 600px; overflow-y: auto;">';
-            html += '<table class="min-w-full" style="width: max-content;">';
-            html += '<thead class="bg-gray-50 sticky top-0">';
-            html += '<tr>';
-            html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rank</th>';
-            html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Roll</th>';
-            html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>';
-            
-            for (var i = 0; i < individualExams.length; i++) {
-                html += '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">' + individualExams[i].subject_name + '</th>';
-            }
-            
-            html += '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Total</th>';
-            html += '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Percentage</th>';
-            html += '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Grade</th>';
-            html += '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Attendance</th>';
-            html += '</tr>';
-            html += '</thead>';
-            html += '<tbody class="bg-white divide-y divide-gray-200">';
-            
-            for (var i = 0; i < rankings.length; i++) {
-                var student = rankings[i];
-                var isMe = student.student_id === studentMonthlyExams.currentStudentId;
-                var rowClass = isMe ? 'bg-green-50 font-semibold' : '';
-                var medalEmoji = student.rank === 1 ? '🥇' : (student.rank === 2 ? '🥈' : (student.rank === 3 ? '🥉' : ''));
+            if (data.success && data.data && data.data.length > 0) {
+                examsData = data.data;
+                renderExamCards(user);
                 
-                html += '<tr class="' + rowClass + '">';
-                html += '<td class="px-4 py-3 text-center">' + medalEmoji + ' ' + student.rank + '</td>';
-                html += '<td class="px-4 py-3">' + (student.roll_number || 'N/A') + '</td>';
-                html += '<td class="px-4 py-3">' + student.student_name + (isMe ? ' <span class="text-green-600">(You)</span>' : '') + '</td>';
-                
-                for (var j = 0; j < individualExams.length; j++) {
-                    var examId = individualExams[j].id;
-                    var mark = student.individual_marks[examId];
-                    if (mark !== undefined && mark !== null) {
-                        html += '<td class="px-4 py-3 text-center">' + mark + '</td>';
-                    } else {
-                        html += '<td class="px-4 py-3 text-center text-gray-400">-</td>';
-                    }
+                // Start auto-refresh every 30 seconds
+                if (!refreshInterval) {
+                    refreshInterval = setInterval(() => {
+                        console.log('🔄 Auto-refreshing exam data...');
+                        refreshExamData(user);
+                    }, 30000); // 30 seconds
                 }
-                
-                html += '<td class="px-4 py-3 text-center font-semibold">' + student.total_marks + '/' + student.total_possible + '</td>';
-                html += '<td class="px-4 py-3 text-center font-semibold">' + student.percentage.toFixed(1) + '%</td>';
-                html += '<td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ' + studentMonthlyExams.getGradeColor(student.grade) + '">' + student.grade + '</span></td>';
-                html += '<td class="px-4 py-3 text-center">' + student.attendance + '</td>';
-                html += '</tr>';
+            } else {
+                container.innerHTML = '<div class="text-center py-12"><div class="bg-gray-50 border border-gray-200 rounded-lg p-8 max-w-md mx-auto"><i class="fas fa-inbox text-gray-400 text-4xl mb-4"></i><p class="text-gray-700 font-medium">No monthly exams available</p><p class="text-sm text-gray-500 mt-2">Your teacher hasn\'t created any monthly exams yet.</p></div></div>';
             }
-            
-            html += '</tbody>';
-            html += '</table>';
-            html += '</div>';
-            html += '</div>';
-            
-            html += '</div>';
-            
-            document.getElementById('examDetailsContent').innerHTML = html;
-        },
+        } catch (err) {
+            console.error('Error loading exams:', err);
+            container.innerHTML = '<div class="text-center py-12"><div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto"><i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i><p class="text-red-700 font-medium">Error loading exams</p><p class="text-sm text-red-600 mt-2">' + err.message + '</p></div></div>';
+        }
+    }
+    
+    async function refreshExamData(user) {
+        const batches = user.batches || [];
+        if (!batches.length) return;
         
-        getGradeColor: function(grade) {
-            var colors = {
-                'A+': 'bg-green-100 text-green-800',
-                'A': 'bg-green-100 text-green-800',
-                'A-': 'bg-green-100 text-green-800',
-                'B': 'bg-blue-100 text-blue-800',
-                'C': 'bg-yellow-100 text-yellow-800',
-                'D': 'bg-orange-100 text-orange-800',
-                'F': 'bg-red-100 text-red-800'
-            };
-            return colors[grade] || 'bg-gray-100 text-gray-800';
-        },
+        const batchId = batches[0].id;
         
-        backToList: function() {
-            document.getElementById('examDetailsView').classList.add('hidden');
-            document.getElementById('examListView').classList.remove('hidden');
+        try {
+            const response = await fetch('/api/monthly-exams?batch_id=' + batchId);
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                const oldData = JSON.stringify(examsData);
+                const newData = JSON.stringify(data.data);
+                
+                if (oldData !== newData) {
+                    console.log('✨ New data detected! Updating...');
+                    examsData = data.data;
+                    
+                    // Re-render cards
+                    renderExamCards(user);
+                    
+                    // Re-load expanded exam details
+                    for (let index in isExpanded) {
+                        if (isExpanded[index]) {
+                            const examId = examsData[index].id;
+                            await loadExamDetails(parseInt(index), examId);
+                        }
+                    }
+                    
+                    // Show update notification
+                    showUpdateNotification();
+                }
+            }
+        } catch (err) {
+            console.error('Error refreshing data:', err);
+        }
+    }
+    
+    function showUpdateNotification() {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce';
+        notification.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Results updated!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.remove('animate-bounce');
+            notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+            setTimeout(() => notification.remove(), 500);
+        }, 3000);
+    }
+    
+    function renderExamCards(user) {
+        const container = document.getElementById('monthlyExamsContent');
+        let html = '';
+        
+        examsData.forEach((exam, index) => {
+            html += '<div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200">';
+            
+            // Clickable Card Header
+            html += '<div class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 cursor-pointer" onclick="toggleExamDetails(' + index + ', ' + exam.id + ')">';
+            html += '<div class="flex justify-between items-start">';
+            html += '<div class="flex-1">';
+            html += '<h3 class="text-xl font-bold mb-2">' + exam.title + '</h3>';
+            html += '<p class="text-indigo-100 text-sm mb-3">' + exam.batch_name + '</p>';
+            html += '<div class="flex flex-wrap gap-2">';
+            html += '<span class="bg-white/20 px-3 py-1 rounded-full text-xs"><i class="far fa-calendar mr-1"></i>' + exam.month_name + ' ' + exam.year + '</span>';
+            html += '<span class="bg-white/20 px-3 py-1 rounded-full text-xs"><i class="fas fa-award mr-1"></i>' + exam.total_marks + ' marks</span>';
+            html += '<span class="bg-white/20 px-3 py-1 rounded-full text-xs"><i class="fas fa-check-circle mr-1"></i>' + exam.status + '</span>';
+            html += '</div></div>';
+            html += '<div class="ml-4">';
+            html += '<i id="arrow-' + index + '" class="fas fa-chevron-down text-2xl transition-transform' + (isExpanded[index] ? ' rotate-180' : '') + '"></i>';
+            html += '</div></div></div>';
+            
+            // Expandable Details Section
+            html += '<div id="exam-details-' + index + '" class="' + (isExpanded[index] ? '' : 'hidden') + '">';
+            if (!isExpanded[index]) {
+                html += '<div class="p-6 bg-gray-50">';
+                html += '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-indigo-600 text-2xl"></i><p class="mt-2 text-gray-600">Loading details...</p></div>';
+                html += '</div>';
+            }
+            html += '</div>';
+            
+            html += '</div>';
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    window.toggleExamDetails = async function(index, examId) {
+        const detailsDiv = document.getElementById('exam-details-' + index);
+        const arrow = document.getElementById('arrow-' + index);
+        
+        if (detailsDiv.classList.contains('hidden')) {
+            // Expand and load data
+            isExpanded[index] = true;
+            detailsDiv.classList.remove('hidden');
+            arrow.classList.add('rotate-180');
+            await loadExamDetails(index, examId);
+        } else {
+            // Collapse
+            isExpanded[index] = false;
+            detailsDiv.classList.add('hidden');
+            arrow.classList.remove('rotate-180');
         }
     };
     
-    window.studentMonthlyExams = studentMonthlyExams;
-    
-    // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        var section = document.getElementById('monthly-examsSection');
-        if (section && !section.classList.contains('hidden')) {
-            console.log('Student Monthly Exams: Initializing on page load');
-            studentMonthlyExams.init();
-        }
-    });
-    
-    // Watch for section visibility changes
-    if (document.getElementById('monthly-examsSection')) {
-        var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                var section = document.getElementById('monthly-examsSection');
-                if (section && !section.classList.contains('hidden') && !studentMonthlyExams.currentUser) {
-                    console.log('Student Monthly Exams: Section became visible, initializing...');
-                    studentMonthlyExams.init();
-                    observer.disconnect();
-                }
-            });
-        });
+    async function loadExamDetails(index, examId) {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const exam = examsData[index];
+        const detailsDiv = document.getElementById('exam-details-' + index);
         
-        observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+        try {
+            // Fetch individual exams
+            const indExamsResponse = await fetch('/api/monthly-exams/' + examId + '/individual-exams');
+            const indExamsData = await indExamsResponse.json();
+            
+            // Fetch rankings
+            const rankingsResponse = await fetch('/api/monthly-exams/' + examId + '/ranking');
+            const rankingsData = await rankingsResponse.json();
+            
+            let html = '<div class="p-6 space-y-6">';
+            
+            // Individual Exams Section
+            html += '<div>';
+            html += '<h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">';
+            html += '<i class="fas fa-clipboard-list text-indigo-600 mr-2"></i> Individual Exams';
+            html += '</h3>';
+            
+            const individualExams = indExamsData.data?.individual_exams || [];
+            const rankings = rankingsData.data?.nearby_rankings || [];
+            
+            // Find student's rank data which contains individual marks
+            const myRankData = rankings.find(r => r.user_id === user.id || 
+                (user.allStudents && user.allStudents.some(s => s.id === r.user_id)));
+            
+            if (individualExams.length > 0) {
+                html += '<div class="grid md:grid-cols-2 gap-4 mb-6">';
+                individualExams.forEach(indExam => {
+                    // Get student's marks for this exam from myRankData
+                    const studentMark = myRankData?.individual_marks?.[indExam.id];
+                    const marksObtained = studentMark?.marks_obtained;
+                    const isAbsent = studentMark?.is_absent;
+                    const grade = studentMark?.grade;
+                    const percentage = studentMark?.percentage;
+                    
+                    html += '<div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">';
+                    html += '<div class="flex justify-between items-start">';
+                    html += '<div class="flex-1">';
+                    html += '<h4 class="font-semibold text-gray-800">' + (indExam.subject || indExam.title) + '</h4>';
+                    html += '<p class="text-sm text-gray-600 mt-1">' + (indExam.title || '') + '</p>';
+                    if (indExam.exam_date) {
+                        html += '<p class="text-xs text-gray-500 mt-2"><i class="far fa-calendar mr-1"></i>' + new Date(indExam.exam_date).toLocaleDateString() + '</p>';
+                    }
+                    
+                    // Show student's result if available
+                    if (studentMark) {
+                        if (isAbsent) {
+                            html += '<div class="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-800 text-sm font-medium">';
+                            html += '<i class="fas fa-times-circle mr-1"></i> Absent';
+                            html += '</div>';
+                        } else {
+                            html += '<div class="mt-3 flex items-center gap-2">';
+                            html += '<span class="text-sm text-gray-600">Your Score:</span>';
+                            html += '<span class="font-bold text-green-600">' + marksObtained + '/' + indExam.marks + '</span>';
+                            html += '<span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 text-xs font-semibold">' + grade + '</span>';
+                            html += '</div>';
+                        }
+                    }
+                    html += '</div>';
+                    html += '<div class="text-right ml-4">';
+                    html += '<div class="text-3xl font-bold text-indigo-600">' + indExam.marks + '</div>';
+                    html += '<div class="text-xs text-gray-500">Total</div>';
+                    html += '</div></div></div>';
+                });
+                html += '</div>';
+                
+                // Total Summary
+                html += '<div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">';
+                html += '<div class="flex justify-between items-center">';
+                html += '<span class="font-bold text-gray-800">Total Marks:</span>';
+                html += '<span class="text-3xl font-bold text-indigo-600">' + exam.total_marks + '</span>';
+                html += '</div></div>';
+            } else {
+                html += '<p class="text-gray-500 italic">No individual exams added yet</p>';
+            }
+            html += '</div>';
+            
+            // Rankings Section
+            html += '<div>';
+            html += '<h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">';
+            html += '<i class="fas fa-trophy text-yellow-500 mr-2"></i> Rankings & Results';
+            html += '</h3>';
+            
+            if (rankings.length > 0) {
+                // Student's Result Card
+                const myRank = rankings.find(r => r.user_id === user.id || 
+                    (user.allStudents && user.allStudents.some(s => s.id === r.user_id)));
+                
+                if (myRank) {
+                    html += '<div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-lg p-5 mb-6">';
+                    html += '<div class="flex items-center justify-between">';
+                    html += '<div class="flex items-center gap-4">';
+                    html += '<div class="bg-green-500 text-white rounded-full w-16 h-16 flex items-center justify-center">';
+                    html += '<span class="text-2xl font-bold">#' + myRank.position + '</span>';
+                    html += '</div>';
+                    html += '<div>';
+                    html += '<div class="text-sm text-gray-600">Your Rank</div>';
+                    html += '<div class="font-bold text-gray-800 text-lg">' + myRank.student_name + '</div>';
+                    html += '</div></div>';
+                    html += '<div class="text-right">';
+                    html += '<div class="text-3xl font-bold text-gray-800">' + myRank.total_exam_marks + '<span class="text-lg text-gray-500">/' + exam.total_marks + '</span></div>';
+                    html += '<div class="text-xl font-semibold text-green-600">' + myRank.percentage.toFixed(1) + '% · ' + myRank.grade + '</div>';
+                    html += '</div></div></div>';
+                }
+                
+                // Rankings Table
+                html += '<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">';
+                html += '<table class="min-w-full">';
+                html += '<thead class="bg-gray-100 border-b border-gray-200">';
+                html += '<tr>';
+                html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rank</th>';
+                html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Student</th>';
+                html += '<th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Marks</th>';
+                html += '<th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">%</th>';
+                html += '<th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Grade</th>';
+                html += '</tr></thead>';
+                html += '<tbody class="divide-y divide-gray-200">';
+                
+                rankings.forEach((rank, idx) => {
+                    const isMyRank = rank.user_id === user.id || 
+                        (user.allStudents && user.allStudents.some(s => s.id === rank.user_id));
+                    const rowClass = isMyRank ? 'bg-green-50 font-semibold' : 'hover:bg-gray-50';
+                    const medalIcon = idx === 0 ? '🥇 ' : idx === 1 ? '🥈 ' : idx === 2 ? '🥉 ' : '';
+                    
+                    html += '<tr class="' + rowClass + '">';
+                    html += '<td class="px-4 py-3 text-center"><span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 font-bold text-sm">' + medalIcon + rank.position + '</span></td>';
+                    html += '<td class="px-4 py-3 text-gray-800">' + rank.student_name + '</td>';
+                    html += '<td class="px-4 py-3 text-center font-semibold text-gray-900">' + rank.total_exam_marks + '<span class="text-gray-500">/' + exam.total_marks + '</span></td>';
+                    html += '<td class="px-4 py-3 text-center font-semibold text-indigo-600">' + rank.percentage.toFixed(1) + '%</td>';
+                    html += '<td class="px-4 py-3 text-center"><span class="px-3 py-1 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-800">' + rank.grade + '</span></td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+            } else {
+                html += '<p class="text-gray-500 italic text-center py-8">No results published yet</p>';
+            }
+            html += '</div>';
+            
+            html += '</div>';
+            
+            detailsDiv.innerHTML = html;
+        } catch (err) {
+            console.error('Error loading exam details:', err);
+            detailsDiv.innerHTML = '<div class="p-6 text-center text-red-600">Error loading details: ' + err.message + '</div>';
+        }
     }
+    
+    setTimeout(loadExams, 500);
 })();
 </script>

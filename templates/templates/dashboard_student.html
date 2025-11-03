@@ -35,6 +35,10 @@
                 <i class="fas fa-chart-bar mr-3 h-6 w-6"></i>
                 My Results
             </a>
+            <a href="#monthly-exams" data-section="monthly-exams" class="nav-item group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 mb-1">
+                <i class="fas fa-clipboard-list mr-3 h-6 w-6"></i>
+                Monthly Exams
+            </a>
             <a href="#attendance" data-section="attendance" class="nav-item group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 mb-1">
                 <i class="fas fa-calendar-check mr-3 h-6 w-6"></i>
                 Attendance
@@ -66,7 +70,7 @@
                     <!-- Page header -->
                     <div class="mb-8">
                         <h1 class="text-2xl font-semibold text-gray-900">Welcome back, <span id="studentName">Student</span>!</h1>
-                        <p class="mt-1 text-sm text-gray-600">Here's an overview of your academic progress</p>
+                        <p class="mt-1 text-sm text-gray-600" id="studentBatches">Here's an overview of your academic progress</p>
                     </div>
 
                     <!-- Dashboard Section -->
@@ -191,6 +195,11 @@
                         </div>
                     </div>
 
+                    <!-- Monthly Exams Section -->
+                    <div id="monthly-examsSection" class="content-section hidden">
+                        {% include 'partials/student_monthly_exams.html' %}
+                    </div>
+
                     <!-- Attendance Section -->
                     <div id="attendanceSection" class="content-section hidden">
                         <div class="bg-white shadow rounded-lg">
@@ -289,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Load user data and dashboard
+    // Initialize
     loadUserData();
     loadDashboardData();
 
@@ -297,6 +306,48 @@ document.addEventListener('DOMContentLoaded', function() {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.name) {
             document.getElementById('studentName').textContent = user.name;
+        }
+        
+        // Hide attendance and exam sections for archived students
+        if (user.isArchived) {
+            // Hide navigation items
+            const navItems = document.querySelectorAll('a[data-section="attendance"], a[data-section="monthly-exams"], a[data-section="exams"], a[data-section="results"]');
+            navItems.forEach(item => {
+                item.style.display = 'none';
+            });
+            
+            // Show archived notice on dashboard
+            const dashboardSection = document.getElementById('dashboardSection');
+            if (dashboardSection) {
+                const archivedNotice = document.createElement('div');
+                archivedNotice.className = 'bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6';
+                archivedNotice.innerHTML = `
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Archived Account:</strong> Your account has been archived. You can view your profile and fee information, but attendance and exam features are disabled.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                dashboardSection.insertBefore(archivedNotice, dashboardSection.firstChild);
+            }
+        }
+        
+        // Show batch information if available
+        const batchesElement = document.getElementById('studentBatches');
+        if (user.batches && user.batches.length > 0) {
+            const batchNames = user.batches.map(b => b.name).join(', ');
+            batchesElement.textContent = `Enrolled in: ${batchNames}`;
+        }
+        
+        // Show or hide student selector based on multi-student flag
+        if (user.isMultiStudent && user.allStudents && user.allStudents.length > 1) {
+            const allStudentNames = user.allStudents.map(s => s.name).join(' & ');
+            document.getElementById('studentName').textContent = allStudentNames;
         }
     }
 
@@ -314,13 +365,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateDashboardStats(stats) {
-        document.getElementById('totalExams').textContent = stats.totalExams || 0;
-        document.getElementById('avgScore').textContent = stats.averageScore ? `${stats.averageScore}%` : 'N/A';
-        document.getElementById('attendanceRate').textContent = stats.attendanceRate ? `${stats.attendanceRate}%` : 'N/A';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        document.getElementById('totalExams').textContent = user.isArchived ? '-' : (stats.totalExams || 0);
+        document.getElementById('avgScore').textContent = user.isArchived ? '-' : (stats.averageScore ? `${stats.averageScore}%` : 'N/A');
+        document.getElementById('attendanceRate').textContent = user.isArchived ? '-' : (stats.attendanceRate ? `${stats.attendanceRate}%` : 'N/A');
         document.getElementById('feeStatus').textContent = stats.feeStatus || 'N/A';
     }
 
     async function loadSectionData(section) {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        // Block archived students from accessing attendance and exam sections
+        if (user.isArchived && ['attendance', 'monthly-exams', 'exams', 'results'].includes(section)) {
+            const archivedMessage = `
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
+                    <i class="fas fa-archive text-yellow-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Section Not Available</h3>
+                    <p class="text-gray-600">This section is not accessible for archived accounts.</p>
+                    <p class="text-sm text-gray-500 mt-2">Please contact your administrator for more information.</p>
+                </div>
+            `;
+            
+            const targetElement = section === 'attendance' ? document.getElementById('attendanceRecord') :
+                                  section === 'monthly-exams' ? document.getElementById('monthlyExamsContent') :
+                                  section === 'exams' ? document.getElementById('examsList') :
+                                  section === 'results' ? document.getElementById('resultsList') : null;
+            
+            if (targetElement) {
+                targetElement.innerHTML = archivedMessage;
+            }
+            return;
+        }
+        
         const loadingHtml = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i><p class="mt-2 text-gray-500">Loading...</p></div>';
         
         switch(section) {
@@ -331,6 +408,12 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'results':
                 document.getElementById('resultsList').innerHTML = loadingHtml;
                 await loadResults();
+                break;
+            case 'monthly-exams':
+                // Initialize the new monthly exams component
+                if (typeof initStudentMonthlyExams === 'function') {
+                    initStudentMonthlyExams();
+                }
                 break;
             case 'attendance':
                 document.getElementById('attendanceRecord').innerHTML = loadingHtml;
@@ -606,6 +689,20 @@ document.addEventListener('DOMContentLoaded', function() {
     window.startExam = function(examId) {
         window.location.href = `/exam/${examId}`;
     };
+    
+    // Helper function for grade colors (used by old code if needed)
+    function getGradeColor(grade) {
+        const colors = {
+            'A+': 'bg-green-100 text-green-800',
+            'A': 'bg-green-100 text-green-800',
+            'A-': 'bg-green-100 text-green-800',
+            'B': 'bg-blue-100 text-blue-800',
+            'C': 'bg-yellow-100 text-yellow-800',
+            'D': 'bg-orange-100 text-orange-800',
+            'F': 'bg-red-100 text-red-800'
+        };
+        return colors[grade] || 'bg-gray-100 text-gray-800';
+    }
 });
 </script>
 {% endblock %}

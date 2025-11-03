@@ -75,10 +75,25 @@ def get_template_payload(template_id):
 
 
 def get_all_templates():
-    """Return all templates with session overrides applied."""
+    """Return all templates with database and session overrides applied."""
+    from models import SmsTemplate
+    
+    user_id = session.get('user_id')
     custom_templates = session.get('custom_templates', {})
+    
+    # Load saved templates from database if user is logged in
+    db_templates = {}
+    if user_id:
+        saved_templates = SmsTemplate.query.filter_by(created_by=user_id, is_active=True).all()
+        for template in saved_templates:
+            db_templates[template.name] = template.content
+    
+    # Merge: Database templates take precedence, then session, then defaults
     return [
-        build_template_payload(template_def, custom_templates.get(template_def['id']))
+        build_template_payload(
+            template_def, 
+            custom_templates.get(template_def['id']) or db_templates.get(template_def['id'])
+        )
         for template_def in BASE_SMS_TEMPLATES
     ]
 
@@ -580,6 +595,8 @@ def get_sms_templates():
 def update_sms_template(template_id):
     """Update an SMS template"""
     try:
+        from models import SmsTemplate
+        
         data = request.get_json()
         new_message = data.get('message', '').strip()
         
@@ -595,6 +612,35 @@ def update_sms_template(template_id):
         if not template_def:
             return error_response('Template not found', 404)
         
+        user_id = session.get('user_id')
+        if not user_id:
+            return error_response('User not authenticated', 401)
+        
+        # Try to find existing template for this user and template_id
+        template = SmsTemplate.query.filter_by(
+            name=template_id,
+            created_by=user_id
+        ).first()
+        
+        if template:
+            # Update existing template
+            template.content = new_message
+            template.updated_at = datetime.utcnow()
+        else:
+            # Create new template
+            template = SmsTemplate(
+                name=template_id,
+                subject=template_def.get('name', template_id),
+                content=new_message,
+                category=template_def.get('category', 'general'),
+                variables=template_def.get('variables', []),
+                created_by=user_id
+            )
+            db.session.add(template)
+        
+        db.session.commit()
+        
+        # Also update session for immediate use
         custom_templates = session.get('custom_templates', {})
         custom_templates[template_id] = new_message
         session['custom_templates'] = custom_templates
@@ -605,6 +651,7 @@ def update_sms_template(template_id):
         return success_response('Template updated successfully', updated_template)
         
     except Exception as e:
+        db.session.rollback()
         return error_response(f'Failed to update template: {str(e)}', 500)
 
 @sms_bp.route('/validate-message', methods=['POST'])

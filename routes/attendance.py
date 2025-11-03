@@ -536,7 +536,10 @@ def get_attendance_summary():
                 (Attendance.status == AttendanceStatus.ABSENT, 1),
                 else_=0
             )).label('absent_days')
-        ).join(Attendance, User.id == Attendance.user_id)
+        ).join(Attendance, User.id == Attendance.user_id).filter(
+            User.is_active == True,
+            User.is_archived == False
+        )
         
         if current_user.role == UserRole.STUDENT:
             query = query.filter(User.id == current_user.id)

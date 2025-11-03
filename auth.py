@@ -79,6 +79,14 @@ def login():
                 flash('Account is deactivated. Please contact administrator.', 'error')
                 return redirect(url_for('templates.login'))
         
+        # Check if user is archived
+        if user.is_archived:
+            if request.is_json:
+                return error_response('Account is archived and cannot log in', 401)
+            else:
+                flash('Your account has been archived. Please contact administrator.', 'error')
+                return redirect(url_for('templates.login'))
+        
         # Check password based on user role
         password_valid = False
         
@@ -138,7 +146,8 @@ def login():
             'phoneNumber': user.phoneNumber,
             'email': user.email or '',
             'smsCount': user.sms_count or 0,
-            'batchId': None
+            'batchId': None,
+            'isArchived': user.is_archived or False
         }
         
         # Safely get batch ID for students
@@ -167,6 +176,7 @@ def login():
             'role': user.role.value,
             'profileImage': user.profile_image or '',
             'smsCount': user.sms_count or 0,
+            'isArchived': user.is_archived or False,
             'lastLogin': user.last_login.isoformat() if user.last_login else None,
             'createdAt': user.created_at.isoformat() if user.created_at else None
         }

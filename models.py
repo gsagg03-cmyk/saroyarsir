@@ -67,7 +67,7 @@ class User(db.Model):
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
-    phoneNumber = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    phoneNumber = db.Column(db.String(20), unique=False, nullable=False, index=True)  # Allow multiple students with same phone
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=True)

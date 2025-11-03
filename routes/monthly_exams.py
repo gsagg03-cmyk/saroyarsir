@@ -292,12 +292,13 @@ def get_comprehensive_monthly_ranking(exam_id):
             monthly_exam_id=exam_id
         ).order_by(IndividualExam.order_index).all()
         
-        # Get all students in the batch
+        # Get all students in the batch (exclude archived students)
         batch_students = User.query.join(
             User.batches
         ).filter(
             User.role == UserRole.STUDENT,
             User.is_active == True,
+            User.is_archived == False,
             Batch.id == monthly_exam.batch_id
         ).all()
         
@@ -1532,6 +1533,40 @@ def delete_individual_exam(exam_id, individual_exam_id):
         db.session.rollback()
         logger.error(f"Error deleting individual exam: {e}")
         return error_response(f'Failed to delete individual exam: {str(e)}', 500)
+
+@monthly_exams_bp.route('/<int:exam_id>', methods=['DELETE'])
+@login_required
+def delete_monthly_exam(exam_id):
+    """Delete a monthly exam period and all associated data"""
+    try:
+        monthly_exam = MonthlyExam.query.get_or_404(exam_id)
+        
+        # Check if user has permission
+        if current_user.role not in [UserRole.SUPER_USER, UserRole.TEACHER]:
+            return error_response('Permission denied', 403)
+        
+        # Check if any marks have been entered
+        marks_count = MonthlyMark.query.filter_by(monthly_exam_id=exam_id).count()
+        if marks_count > 0:
+            return error_response('Cannot delete exam period. Marks have been entered. Please delete all marks first.', 400)
+        
+        # Delete associated data
+        # Delete rankings
+        MonthlyRanking.query.filter_by(monthly_exam_id=exam_id).delete()
+        
+        # Delete individual exams
+        IndividualExam.query.filter_by(monthly_exam_id=exam_id).delete()
+        
+        # Delete the monthly exam
+        db.session.delete(monthly_exam)
+        db.session.commit()
+        
+        return success_response('Monthly exam period deleted successfully')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error deleting monthly exam: {str(e)}')
+        return error_response(f'Failed to delete monthly exam: {str(e)}', 500)
 
 # Helper functions
 

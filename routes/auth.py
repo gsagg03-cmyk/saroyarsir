@@ -62,21 +62,32 @@ def login():
                 flash('Invalid phone number format. Please enter a valid Bangladeshi number.', 'error')
                 return redirect(url_for('templates.login'))
         
-        # Find user by phone
-        user = User.query.filter_by(phoneNumber=formatted_phone).first()
+        # Find all users with this phone number (for shared parent numbers)
+        users = User.query.filter_by(phoneNumber=formatted_phone, is_active=True).all()
         
-        if not user:
+        if not users:
             if request.is_json:
                 return error_response('Invalid phone number or password', 401)
             else:
                 flash('Invalid phone number or password. Please try again.', 'error')
                 return redirect(url_for('templates.login'))
         
+        # Use the first user for password validation
+        user = users[0]
+        
         if not user.is_active:
             if request.is_json:
                 return error_response('Account is deactivated', 401)
             else:
                 flash('Account is deactivated. Please contact administrator.', 'error')
+                return redirect(url_for('templates.login'))
+        
+        # Check if ANY of the users with this phone number are archived
+        if any(u.is_archived for u in users):
+            if request.is_json:
+                return error_response('Account is archived and cannot log in', 401)
+            else:
+                flash('Your account has been archived. Please contact administrator.', 'error')
                 return redirect(url_for('templates.login'))
         
         # Check password based on user role
@@ -110,13 +121,8 @@ def login():
                 return False
 
         if user.role == UserRole.STUDENT:
-            # For students: last-4 digits login, legacy default, or hashed password
-            last_4_digits = formatted_phone[-4:]
-            password_valid = (
-                password == last_4_digits or
-                password == "student123" or
-                (user.password_hash and verify_hash(user.password_hash, password))
-            )
+            # For students: only accept "student123" as password
+            password_valid = (password == "student123")
         else:
             # For teachers and super users, check hashed password
             if user.password_hash:
@@ -136,16 +142,26 @@ def login():
         db.session.commit()
         
         # Create session (match TypeScript session structure)
+        # For multi-student accounts, combine all students' names
+        if len(users) > 1:
+            all_names = " & ".join([f"{u.first_name} {u.last_name}" for u in users])
+            first_names = " & ".join([u.first_name for u in users])
+        else:
+            all_names = f"{user.first_name} {user.last_name}"
+            first_names = user.first_name
+        
         session_user = {
             'id': user.id,
             'role': user.role.value,
-            'name': f"{user.first_name} {user.last_name}",
-            'firstName': user.first_name,
+            'name': all_names,
+            'firstName': first_names,
             'lastName': user.last_name,
             'phoneNumber': user.phoneNumber,
             'email': user.email or '',
             'smsCount': user.sms_count or 0,
-            'batchId': None
+            'batchId': None,
+            'isMultiStudent': len(users) > 1,
+            'isArchived': user.is_archived or False
         }
         
         # Safely get batch ID for students
@@ -163,6 +179,10 @@ def login():
         session['user_role'] = user.role.value
         session.permanent = True
         
+        # Clear pending student selection data if it exists
+        session.pop('pending_students', None)
+        session.pop('pending_phone', None)
+        
         # Prepare user data for response
         user_data = {
             'id': user.id,
@@ -174,28 +194,63 @@ def login():
             'role': user.role.value,
             'profileImage': user.profile_image or '',
             'smsCount': user.sms_count or 0,
+            'isArchived': user.is_archived or False,
             'lastLogin': user.last_login.isoformat() if user.last_login else None,
             'createdAt': user.created_at.isoformat() if user.created_at else None
         }
         
         # Add role-specific data
         if user.role == UserRole.STUDENT:
-            # Get student's batches safely
-            try:
-                user_batches = user.batches if hasattr(user, 'batches') else []
-                batches = [{
-                    'id': batch.id,
-                    'name': batch.name,
-                    'description': batch.description,
-                    'fee_amount': float(batch.fee_amount),
-                    'is_active': batch.is_active
-                } for batch in user_batches if batch.is_active]
-                
-                user_data['batches'] = batches
-                session_user['batches'] = batches
-            except Exception:
-                user_data['batches'] = []
-                session_user['batches'] = []
+            # Get all batches from ALL students (for multi-student accounts)
+            all_batches = []
+            all_batch_ids = set()
+            all_students_data = []
+            
+            for student in users:
+                try:
+                    student_batches = student.batches if hasattr(student, 'batches') else []
+                    batches_list = []
+                    
+                    for batch in student_batches:
+                        if batch.is_active and batch.id not in all_batch_ids:
+                            all_batch_ids.add(batch.id)
+                            all_batches.append({
+                                'id': batch.id,
+                                'name': batch.name,
+                                'description': batch.description,
+                                'fee_amount': float(batch.fee_amount),
+                                'is_active': batch.is_active
+                            })
+                        
+                        if batch.is_active:
+                            batches_list.append({
+                                'id': batch.id,
+                                'name': batch.name,
+                                'description': batch.description
+                            })
+                    
+                    all_students_data.append({
+                        'id': student.id,
+                        'name': f"{student.first_name} {student.last_name}",
+                        'firstName': student.first_name,
+                        'lastName': student.last_name,
+                        'phoneNumber': student.phoneNumber,
+                        'batches': batches_list
+                    })
+                except Exception:
+                    pass
+            
+            # Set combined batches for all students
+            user_data['batches'] = all_batches
+            session_user['batches'] = all_batches
+            
+            # Add multi-student information
+            if len(users) > 1:
+                user_data['isMultiStudent'] = True
+                user_data['allStudents'] = all_students_data
+                session_user['isMultiStudent'] = True
+                session_user['allStudents'] = all_students_data
+        
         
         # Return consistent response format
         response_data = {

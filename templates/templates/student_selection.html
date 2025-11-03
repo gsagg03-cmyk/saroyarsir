@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Student - SmartGardenHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl w-full space-y-8">
+            <div>
+                <div class="flex justify-center">
+                    <i class="fas fa-users text-indigo-600 text-6xl"></i>
+                </div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Select Student
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600">
+                    Multiple students found for phone number: <span class="font-medium">{{ phone }}</span>
+                </p>
+                <p class="text-center text-sm text-gray-600">
+                    Please select which student you want to view
+                </p>
+            </div>
+
+            <div class="mt-8 space-y-4">
+                {% for student in students %}
+                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-200 hover:border-indigo-500"
+                     onclick="selectStudent({{ student.id }}, '{{ student.phoneNumber }}', '{{ student.name }}', {{ student.batches | tojson }})">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                                            <i class="fas fa-user-graduate text-indigo-600 text-xl"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">{{ student.name }}</h3>
+                                        <p class="text-sm text-gray-600">{{ student.phoneNumber }}</p>
+                                    </div>
+                                </div>
+                                
+                                {% if student.batches and student.batches|length > 0 %}
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    {% for batch in student.batches %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                                        <i class="fas fa-book mr-1"></i>
+                                        {{ batch.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="mt-2 text-sm text-gray-500">No batches assigned</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="ml-4">
+                                <i class="fas fa-chevron-right text-gray-400 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-6 text-center">
+                <a href="/login" class="text-indigo-600 hover:text-indigo-500 text-sm font-medium">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function selectStudent(studentId, phone, name, batches) {
+            try {
+                // Make API call to login with selected student
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phone,
+                        password: phone.slice(-4), // Use last 4 digits as default
+                        student_id: studentId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Store user data in localStorage
+                    const userData = result.data.user;
+                    
+                    // Check if there are multiple students (get all students from page)
+                    const allStudentsElements = document.querySelectorAll('[onclick^="selectStudent"]');
+                    const allStudents = [];
+                    
+                    allStudentsElements.forEach(el => {
+                        const onclickAttr = el.getAttribute('onclick');
+                        const match = onclickAttr.match(/selectStudent\((\d+), '([^']+)', '([^']+)', (.+)\)/);
+                        if (match) {
+                            allStudents.push({
+                                id: parseInt(match[1]),
+                                phoneNumber: match[2],
+                                name: match[3],
+                                batches: JSON.parse(match[4].replace(/'/g, '"'))
+                            });
+                        }
+                    });
+
+                    if (allStudents.length > 1) {
+                        userData.isMultiStudent = true;
+                        userData.allStudents = allStudents;
+                    }
+                    
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    
+                    // Redirect to student dashboard
+                    window.location.href = '/student';
+                } else {
+                    alert(result.message || 'Login failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error selecting student:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
