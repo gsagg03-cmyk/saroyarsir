@@ -101,7 +101,7 @@ def get_templates():
         logger.error(f"Error getting SMS templates: {e}")
         return error_response('Failed to retrieve templates', 500)
 
-@sms_templates_bp.route('/<template_type>', methods=['POST'])
+@sms_templates_bp.route('/<template_type>', methods=['POST', 'PUT'])
 @login_required
 @require_role('TEACHER', 'SUPER_USER')
 def update_template(template_type):
@@ -172,7 +172,7 @@ def update_template(template_type):
         logger.error(f"Error updating SMS template: {e}")
         return error_response('Failed to update template', 500)
 
-@sms_templates_bp.route('/<template_type>/save', methods=['POST'])
+@sms_templates_bp.route('/<template_type>/save', methods=['POST', 'PUT'])
 @login_required
 @require_role('TEACHER', 'SUPER_USER')
 def save_template(template_type):
