@@ -262,10 +262,16 @@ function onlineExamManagement() {
 
         async createExam() {
             try {
+                // Add default pass_percentage if not provided
+                const examData = {
+                    ...this.formData,
+                    pass_percentage: 40  // Default pass percentage
+                };
+                
                 const response = await fetch('/api/online-exams', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.formData)
+                    body: JSON.stringify(examData)
                 });
                 const data = await response.json();
                 if (data.success) {

@@ -101,7 +101,7 @@ def create_exam():
         if total_questions < 1 or total_questions > 40:
             return error_response('Total questions must be between 1 and 40', 400)
         
-        # Create exam
+        # Create exam with defaults for optional fields
         exam = OnlineExam(
             title=data['title'],
             description=data.get('description', ''),
@@ -110,7 +110,7 @@ def create_exam():
             chapter_name=data['chapter_name'],
             duration=int(data['duration']),
             total_questions=total_questions,
-            pass_percentage=float(data.get('pass_percentage', 40.0)),
+            pass_percentage=float(data.get('pass_percentage', 40.0)),  # Default 40%
             allow_retake=data.get('allow_retake', True),
             is_active=data.get('is_active', True),
             is_published=False,  # Not published by default
