@@ -455,7 +455,9 @@ function feeManagerNew() {
                             batch_id: parseInt(this.selectedBatch),
                             month: month,
                             year: parseInt(this.selectedYear),
-                            amount: feeData.amount
+                            amount: feeData.amount,
+                            exam_fee: this.fees[studentId].exam_fee || 0,
+                            other_fee: this.fees[studentId].other_fee || 0
                         })
                     });
                     
