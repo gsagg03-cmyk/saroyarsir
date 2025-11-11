@@ -63,7 +63,9 @@ with app.app_context():
                 correct_answer VARCHAR(1) NOT NULL,
                 explanation TEXT,
                 question_order INTEGER DEFAULT 0,
+                marks INTEGER DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (exam_id) REFERENCES online_exams (id) ON DELETE CASCADE
             )
         """))
@@ -80,14 +82,16 @@ with app.app_context():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 exam_id INTEGER NOT NULL,
                 student_id INTEGER NOT NULL,
-                score FLOAT DEFAULT 0,
-                total_questions INTEGER NOT NULL,
-                correct_answers INTEGER DEFAULT 0,
-                percentage FLOAT DEFAULT 0,
-                is_passed BOOLEAN DEFAULT 0,
-                time_taken INTEGER,
+                attempt_number INTEGER DEFAULT 1,
                 started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 submitted_at DATETIME,
+                time_taken INTEGER,
+                is_submitted BOOLEAN DEFAULT 0,
+                auto_submitted BOOLEAN DEFAULT 0,
+                score INTEGER DEFAULT 0,
+                total_marks INTEGER DEFAULT 0,
+                percentage FLOAT DEFAULT 0.0,
+                is_passed BOOLEAN DEFAULT 0,
                 FOREIGN KEY (exam_id) REFERENCES online_exams (id) ON DELETE CASCADE,
                 FOREIGN KEY (student_id) REFERENCES users (id)
             )
@@ -107,9 +111,11 @@ with app.app_context():
                 question_id INTEGER NOT NULL,
                 selected_answer VARCHAR(1),
                 is_correct BOOLEAN DEFAULT 0,
+                marks_obtained INTEGER DEFAULT 0,
                 answered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (attempt_id) REFERENCES online_exam_attempts (id) ON DELETE CASCADE,
-                FOREIGN KEY (question_id) REFERENCES online_questions (id)
+                FOREIGN KEY (question_id) REFERENCES online_questions (id),
+                UNIQUE (attempt_id, question_id)
             )
         """))
         db.session.commit()
@@ -135,8 +141,27 @@ with app.app_context():
         else:
             print("\n✅ All required columns present!")
         
+        # Verify questions table
+        print("\n7. Verifying online_questions table structure...")
+        result = db.session.execute(text("PRAGMA table_info(online_questions)"))
+        columns = [row[1] for row in result.fetchall()]
+        
+        required_q_columns = [
+            'id', 'exam_id', 'question_text', 'option_a', 'option_b', 
+            'option_c', 'option_d', 'correct_answer', 'explanation',
+            'question_order', 'marks', 'created_at', 'updated_at'
+        ]
+        
+        print(f"Found columns: {', '.join(columns)}")
+        
+        missing = [col for col in required_q_columns if col not in columns]
+        if missing:
+            print(f"\n❌ MISSING COLUMNS: {', '.join(missing)}")
+        else:
+            print("\n✅ All required columns present in questions table!")
+        
         # Verify all tables exist
-        print("\n7. Verifying all tables exist...")
+        print("\n8. Verifying all tables exist...")
         result = db.session.execute(text("""
             SELECT name FROM sqlite_master 
             WHERE type='table' AND name IN (
@@ -159,5 +184,7 @@ with app.app_context():
         
     except Exception as e:
         print(f"\n❌ ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         db.session.rollback()
         raise
