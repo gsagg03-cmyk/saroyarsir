@@ -474,7 +474,26 @@ function feeManagerNew() {
             for (const key of changes) {
                 const [studentId, month] = key.split('_').map(Number);
                 const monthKey = String(month);
+                
+                // Safety check: ensure student data exists
+                if (!this.fees[studentId]) {
+                    console.warn(`Skipping ${key}: student ${studentId} data not loaded`);
+                    continue;
+                }
+                
                 const feeData = this.fees[studentId][monthKey];
+                
+                // Safety check: ensure month data exists
+                if (!feeData) {
+                    console.warn(`Skipping ${key}: month ${month} data not initialized for student ${studentId}`);
+                    // Initialize it now
+                    this.fees[studentId][monthKey] = {
+                        amount: 0,
+                        fee_id: null,
+                        status: 'pending'
+                    };
+                    continue;
+                }
                 
                 try {
                     const payload = {
@@ -482,7 +501,7 @@ function feeManagerNew() {
                         batch_id: parseInt(this.selectedBatch),
                         month: month,
                         year: parseInt(this.selectedYear),
-                        amount: feeData.amount,
+                        amount: feeData.amount || 0,
                         exam_fee: this.fees[studentId].exam_fee || 0,
                         other_fee: this.fees[studentId].other_fee || 0
                     };
