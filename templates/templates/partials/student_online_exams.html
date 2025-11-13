@@ -1,15 +1,15 @@
-<!-- Student Online Exams Partial v1.2 (auto-init, debug logs, visible version, global ref) -->
+<!-- Student Online Exams Partial v1.3 (Fixed: modals, fetch credentials, start/submit issues) -->
 <div x-data="studentOnlineExams()" x-init="init(); console.log('🎯 student_online_exams partial init triggered');" class="space-y-6">
     <!-- Add MathJax for scientific equations -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <h2 class="text-2xl font-bold text-gray-900 mb-2">Online Exams
-        <span class="ml-2 align-middle text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 border" title="Exams UI version">
-            v1.2
+        <span class="ml-2 align-middle text-xs px-2 py-1 rounded bg-green-100 text-green-700 border border-green-300" title="Exams UI version - Fixed modals & submit">
+            v1.3
         </span>
     </h2>
-    <p class="text-xs text-gray-500 mb-4">If you don't see exams, click Online Exam tab again. This page auto-loads published exams for students.</p>
+    <p class="text-xs text-gray-500 mb-4">Fixed: Start exam, submit exam, and browser popup issues. If problems persist, hard refresh (Ctrl+Shift+R).</p>
 
     <!-- Available Exams - Mobile Optimized -->
     <div class="grid grid-cols-1 gap-4">
@@ -69,12 +69,12 @@
     <div x-show="exams.length === 0" class="col-span-full text-center py-12">
         <i class="fas fa-clipboard-list text-6xl text-gray-300 mb-4"></i>
         <p class="text-gray-600">No exams available at the moment</p>
-        <p class="text-xs text-gray-400 mt-2">Student Exams UI v1.2</p>
+        <p class="text-xs text-gray-400 mt-2">Student Exams UI v1.3 - Modal & Submit Fixed</p>
     </div>
 </div>
 
 <!-- Exam Taking Modal - Mobile Optimized -->
-<div x-show="activeExam !== null" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
+<div x-show="activeExam !== null" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;" x-cloak>
     <div class="flex items-start md:items-center justify-center min-h-screen p-2 md:p-4">
         <div class="fixed inset-0 bg-gray-900 bg-opacity-75" @click="confirmExit()"></div>
         
@@ -140,17 +140,11 @@
     </div>
 
     <!-- Results Modal - Mobile Optimized -->
-    <div x-show="showResults" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
+    <div x-show="showResults" class="fixed inset-0 z-[10000] overflow-y-auto" style="display: none;" x-cloak>
         <div class="flex items-center justify-center min-h-screen p-2 md:p-4">
             <div class="fixed inset-0 bg-gray-900 bg-opacity-75"></div>
             
             <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all w-full max-w-md relative z-10">
-                <div class="bg-gradient-to-r from-green-500 to-blue-600 text-white px-4 md:px-6 py-4 md:py-6 text-center">
-    <div x-show="showResults" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div @click="showResults = false" class="fixed inset-0 bg-gray-900 bg-opacity-75"></div>
-            
-            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all w-full max-w-2xl relative z-10">
                 <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-8 text-center">
                     <h3 class="text-2xl font-bold mb-2">Exam Results</h3>
                     <div class="text-6xl font-bold my-4" x-text="results?.percentage + '%'"></div>
@@ -248,21 +242,32 @@ function studentOnlineExams() {
         },
 
         async startExam(exam) {
+            console.log('🎬 Starting exam:', exam.title, 'ID:', exam.id);
+            
             // Prevent starting if already taking an exam
             if (this.activeExam !== null) {
+                console.warn('⚠️ Cannot start - already taking exam:', this.activeExam.title);
                 alert('Please complete or exit the current exam first.');
                 return;
             }
 
-            if (!confirm('Start this exam? The timer will begin immediately.')) return;
+            if (!confirm('Start this exam? The timer will begin immediately.')) {
+                console.log('❌ User cancelled exam start');
+                return;
+            }
 
             try {
+                console.log('📡 Fetching /api/online-exams/' + exam.id + '/start');
                 const response = await fetch(`/api/online-exams/${exam.id}/start`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin'
                 });
                 
+                console.log('📡 Start exam response status:', response.status);
                 const data = await response.json();
+                console.log('📡 Start exam data:', data);
+                
                 if (data.success) {
                     this.activeExam = exam;
                     this.attemptId = data.data.attempt_id;
@@ -270,20 +275,28 @@ function studentOnlineExams() {
                     this.timeRemaining = exam.duration * 60; // Convert to seconds
                     this.answers = {};
                     this.isSubmitting = false;
+                    
+                    console.log('✅ Exam started successfully');
+                    console.log('  - Attempt ID:', this.attemptId);
+                    console.log('  - Questions:', this.questions.length);
+                    console.log('  - Duration:', exam.duration, 'minutes');
+                    
                     this.startTimer();
                     
                     // Render MathJax after questions load
                     setTimeout(() => {
                         if (window.MathJax) {
                             MathJax.typesetPromise();
+                            console.log('✅ MathJax rendered');
                         }
                     }, 100);
                 } else {
-                    alert('Error: ' + data.message);
+                    console.error('❌ Failed to start exam:', data.message);
+                    alert('Error: ' + (data.message || 'Failed to start exam'));
                 }
             } catch (error) {
-                console.error('Failed to start exam:', error);
-                alert('Failed to start exam');
+                console.error('❌ Exception starting exam:', error);
+                alert('Failed to start exam: ' + error.message);
             }
         },
 
@@ -314,6 +327,7 @@ function studentOnlineExams() {
                 await fetch(`/api/online-exams/attempts/${this.attemptId}/answer`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify({
                         question_id: questionId,
                         selected_answer: answer
@@ -333,50 +347,66 @@ function studentOnlineExams() {
         },
 
         async submitExam() {
+            console.log('📤 Submit exam clicked');
+            
             // Prevent double submission
             if (this.isSubmitting) {
+                console.warn('⚠️ Already submitting, ignoring duplicate click');
                 return;
             }
 
             const answeredCount = this.getAnsweredCount();
             const totalQuestions = this.questions.length;
             
+            console.log('📊 Answered:', answeredCount, '/', totalQuestions);
+            
             if (answeredCount < totalQuestions) {
                 if (!confirm(`You have answered ${answeredCount} out of ${totalQuestions} questions. Submit anyway?`)) {
+                    console.log('❌ User cancelled partial submission');
                     return;
                 }
             } else {
                 if (!confirm('Submit exam? You cannot change answers after submission.')) {
+                    console.log('❌ User cancelled submission');
                     return;
                 }
             }
 
             this.isSubmitting = true;
+            console.log('🔒 Setting isSubmitting = true');
             
             // Stop the timer
             if (this.timer) {
                 clearInterval(this.timer);
                 this.timer = null;
+                console.log('⏹️ Timer stopped');
             }
 
             try {
+                console.log('📡 Submitting to /api/online-exams/attempts/' + this.attemptId + '/submit');
                 const response = await fetch(`/api/online-exams/attempts/${this.attemptId}/submit`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin'
                 });
                 
+                console.log('📡 Submit response status:', response.status);
                 const data = await response.json();
+                console.log('📡 Submit data:', data);
+                
                 if (data.success) {
+                    console.log('✅ Exam submitted successfully');
                     this.results = data.data;
                     this.showResults = true;
                     this.resetExam();
                 } else {
-                    alert('Error: ' + data.message);
+                    console.error('❌ Submit failed:', data.message);
+                    alert('Error: ' + (data.message || 'Failed to submit'));
                     this.isSubmitting = false;
                 }
             } catch (error) {
-                console.error('Failed to submit exam:', error);
-                alert('Failed to submit exam');
+                console.error('❌ Exception submitting exam:', error);
+                alert('Failed to submit exam: ' + error.message);
                 this.isSubmitting = false;
             }
         },
@@ -399,6 +429,7 @@ function studentOnlineExams() {
                 const response = await fetch(`/api/online-exams/attempts/${this.attemptId}/submit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ auto_submit: true })
                 });
                 

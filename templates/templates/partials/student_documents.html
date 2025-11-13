@@ -38,9 +38,14 @@ window.allDocuments = [];
 
 window.loadDocuments = function() {
     console.log('Loading documents from /api/documents/');
-    fetch('/api/documents/?include_inactive=true')
+    fetch('/api/documents/?include_inactive=true', {
+        credentials: 'same-origin'
+    })
         .then(function(response) {
             console.log('Documents response status:', response.status);
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
             return response.json();
         })
         .then(function(data) {
@@ -49,13 +54,16 @@ window.loadDocuments = function() {
                 window.allDocuments = data.data.documents;
                 console.log('Total documents loaded:', window.allDocuments.length);
                 renderDocuments(window.allDocuments);
+            } else {
+                console.warn('No documents found in response');
+                window.allDocuments = [];
             }
             document.getElementById('documentsLoading').classList.add('hidden');
             document.getElementById('documentsContainer').classList.remove('hidden');
         })
         .catch(function(error) {
             console.error('Error loading documents:', error);
-            document.getElementById('documentsLoading').classList.add('hidden');
+            document.getElementById('documentsLoading').innerHTML = '<p class="text-red-600">Failed to load documents. Please refresh.</p>';
         });
 };
 
