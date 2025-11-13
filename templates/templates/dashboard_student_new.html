@@ -152,6 +152,22 @@
             <div id="online-resourcesSection" class="content-section hidden">
                 {% include 'partials/student_documents.html' %}
             </div>
+            
+            <script>
+            // Force load documents when section becomes visible
+            document.addEventListener('DOMContentLoaded', function() {
+                const observer = new MutationObserver(function(mutations) {
+                    const section = document.getElementById('online-resourcesSection');
+                    if (section && !section.classList.contains('hidden')) {
+                        console.log('📚 Resources section visible, triggering load');
+                        if (typeof window.loadDocuments === 'function' && (!window.allDocuments || window.allDocuments.length === 0)) {
+                            setTimeout(function() { window.loadDocuments(); }, 100);
+                        }
+                    }
+                });
+                observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            });
+            </script>
         </main>
     </div>
 </div>
@@ -233,9 +249,11 @@ function showSection(sectionName) {
         console.log('📚 Online Resources Section');
         console.log('  - window.loadDocuments type:', typeof window.loadDocuments);
         console.log('  - window.allDocuments:', window.allDocuments);
+        console.log('  - window.documentsLoaded:', window.documentsLoaded);
         
         if (typeof window.loadDocuments === 'function') {
-            if (!window.allDocuments || window.allDocuments.length === 0) {
+            // Always try to load if not already loaded
+            if (!window.documentsLoaded) {
                 console.log('  → Calling loadDocuments()...');
                 try {
                     window.loadDocuments();

@@ -29,41 +29,50 @@
 </div>
 
 <script>
-// Student Documents Module v2.0.1 - Build: 2025-10-22-19:30  
-console.log('📄 Documents Module Loading v2.0.1');
+// Student Documents Module v2.0.2 - Build: 2025-11-13 - Force Load Fix
+console.log('📄 Documents Module Loading v2.0.2');
 
 // Make variables global for access from parent
 window.currentFilter = 'all';
 window.allDocuments = [];
+window.documentsLoaded = false;
 
 window.loadDocuments = function() {
-    console.log('Loading documents from /api/documents/');
+    if (window.documentsLoaded && window.allDocuments.length > 0) {
+        console.log('📄 Documents already loaded:', window.allDocuments.length);
+        return;
+    }
+    
+    console.log('📡 Loading documents from /api/documents/');
     fetch('/api/documents/?include_inactive=true', {
         credentials: 'same-origin'
     })
         .then(function(response) {
-            console.log('Documents response status:', response.status);
+            console.log('📡 Documents response status:', response.status);
             if (!response.ok) {
                 throw new Error('HTTP ' + response.status);
             }
             return response.json();
         })
         .then(function(data) {
-            console.log('Documents data:', data);
+            console.log('📄 Documents data:', data);
             if (data.success && data.data && data.data.documents) {
                 window.allDocuments = data.data.documents;
-                console.log('Total documents loaded:', window.allDocuments.length);
+                window.documentsLoaded = true;
+                console.log('✅ Total documents loaded:', window.allDocuments.length);
                 renderDocuments(window.allDocuments);
             } else {
-                console.warn('No documents found in response');
+                console.warn('⚠️ No documents found in response');
                 window.allDocuments = [];
+                window.documentsLoaded = true;
             }
             document.getElementById('documentsLoading').classList.add('hidden');
             document.getElementById('documentsContainer').classList.remove('hidden');
         })
         .catch(function(error) {
-            console.error('Error loading documents:', error);
+            console.error('❌ Error loading documents:', error);
             document.getElementById('documentsLoading').innerHTML = '<p class="text-red-600">Failed to load documents. Please refresh.</p>';
+            window.documentsLoaded = false;
         });
 };
 

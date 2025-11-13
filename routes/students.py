@@ -197,7 +197,8 @@ def create_student():
                     else:
                         return error_response('Batch not found', 404)
                 else:
-                    return error_response('Student with this phone already exists. Please provide a batch to enroll them in.', 409)
+                    # Allow creating new student with same phone but different name (sibling)
+                    print(f"INFO: Phone {phone} exists but allowing new student (different child, same parent phone)")
             elif existing_user and existing_user.role != UserRole.STUDENT:
                 return error_response('This phone number is already registered as a teacher/admin account', 409)
         else:

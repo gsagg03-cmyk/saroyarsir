@@ -160,17 +160,26 @@ def login():
             'email': user.email or '',
             'smsCount': user.sms_count or 0,
             'batchId': None,
+            'allBatchIds': [],  # Store all batches from all students
             'isMultiStudent': len(users) > 1,
             'isArchived': user.is_archived or False
         }
         
-        # Safely get batch ID for students
+        # Safely get batch IDs for students - collect from ALL students with this phone
         if user.role == UserRole.STUDENT:
             try:
-                user_batches = user.batches if hasattr(user, 'batches') else []
-                if user_batches:
-                    session_user['batchId'] = user_batches[0].id
-            except Exception:
+                all_batch_ids = []
+                for student_user in users:
+                    user_batches = student_user.batches if hasattr(student_user, 'batches') else []
+                    for batch in user_batches:
+                        if batch.id not in all_batch_ids:
+                            all_batch_ids.append(batch.id)
+                
+                if all_batch_ids:
+                    session_user['batchId'] = all_batch_ids[0]  # First batch for backward compatibility
+                    session_user['allBatchIds'] = all_batch_ids  # All batches for multi-batch support
+            except Exception as e:
+                print(f"Error getting batches: {str(e)}")
                 pass  # Leave batchId as None if there's any issue
         
         # Set session data for both template and API compatibility
