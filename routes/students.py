@@ -65,17 +65,28 @@ def get_students():
         students_data = []
         for student in students:
             student_data = serialize_user(student)
-            # Add batch information
+            # Add batch information - include ALL batches
             if student.batches:
+                # Primary batch (first one for backward compatibility)
                 student_data['batch'] = {
                     'id': student.batches[0].id,
                     'name': student.batches[0].name,
                     'description': student.batches[0].description
                 }
                 student_data['batchId'] = student.batches[0].id
+                
+                # All batches this student is enrolled in
+                student_data['batches'] = [{
+                    'id': batch.id,
+                    'name': batch.name,
+                    'description': batch.description
+                } for batch in student.batches]
+                student_data['batchIds'] = [batch.id for batch in student.batches]
             else:
                 student_data['batch'] = None
                 student_data['batchId'] = None
+                student_data['batches'] = []
+                student_data['batchIds'] = []
             
             # Format for frontend
             student_data['firstName'] = student_data.get('first_name', '')

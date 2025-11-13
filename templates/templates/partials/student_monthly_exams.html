@@ -15,28 +15,48 @@
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         console.log('📚 Student Monthly Exams - User data:', user);
         
-        let batches = user.batches || [];
+        // Get ALL batch IDs from user session
+        let batchIds = user.allBatchIds || [];
         
-        if (!batches.length && user.allStudents && user.allStudents.length > 0) {
-            const firstStudent = user.allStudents[0];
-            batches = firstStudent.batches || [];
+        // Fallback to batches array if allBatchIds not available
+        if (!batchIds.length) {
+            let batches = user.batches || [];
+            if (!batches.length && user.allStudents && user.allStudents.length > 0) {
+                const firstStudent = user.allStudents[0];
+                batches = firstStudent.batches || [];
+            }
+            batchIds = batches.map(b => b.id);
         }
         
         const container = document.getElementById('monthlyExamsContent');
         
-        if (!batches.length) {
+        if (!batchIds.length) {
             container.innerHTML = '<div class="text-center py-12"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto"><p class="text-gray-700 font-medium mb-2">No batches assigned</p><p class="text-sm text-gray-600">Please contact your teacher to be assigned to a batch.</p></div></div>';
             return;
         }
         
-        const batchId = batches[0].id;
+        console.log('📚 Loading monthly exams from batches:', batchIds);
         
         try {
-            const response = await fetch('/api/monthly-exams?batch_id=' + batchId);
-            const data = await response.json();
+            // Load exams from ALL batches
+            const promises = batchIds.map(batchId => 
+                fetch('/api/monthly-exams?batch_id=' + batchId).then(r => r.json())
+            );
             
-            if (data.success && data.data && data.data.length > 0) {
-                examsData = data.data;
+            const results = await Promise.all(promises);
+            
+            // Combine all exam data from all batches
+            let allExams = [];
+            results.forEach(data => {
+                if (data.success && data.data && data.data.length > 0) {
+                    allExams = allExams.concat(data.data);
+                }
+            });
+            
+            if (allExams.length > 0) {
+                // Sort by exam date (newest first)
+                examsData = allExams.sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date));
+                console.log('✅ Loaded', examsData.length, 'exams from', batchIds.length, 'batch(es)');
                 renderExamCards(user);
                 
                 // Start auto-refresh every 30 seconds
@@ -56,37 +76,56 @@
     }
     
     async function refreshExamData(user) {
-        const batches = user.batches || [];
-        if (!batches.length) return;
+        // Get ALL batch IDs from user session
+        let batchIds = user.allBatchIds || [];
         
-        const batchId = batches[0].id;
+        // Fallback to batches array if allBatchIds not available
+        if (!batchIds.length) {
+            const batches = user.batches || [];
+            batchIds = batches.map(b => b.id);
+        }
+        
+        if (!batchIds.length) return;
         
         try {
-            const response = await fetch('/api/monthly-exams?batch_id=' + batchId);
-            const data = await response.json();
+            // Load exams from ALL batches
+            const promises = batchIds.map(batchId => 
+                fetch('/api/monthly-exams?batch_id=' + batchId).then(r => r.json())
+            );
             
-            if (data.success && data.data) {
-                const oldData = JSON.stringify(examsData);
-                const newData = JSON.stringify(data.data);
-                
-                if (oldData !== newData) {
-                    console.log('✨ New data detected! Updating...');
-                    examsData = data.data;
-                    
-                    // Re-render cards
-                    renderExamCards(user);
-                    
-                    // Re-load expanded exam details
-                    for (let index in isExpanded) {
-                        if (isExpanded[index]) {
-                            const examId = examsData[index].id;
-                            await loadExamDetails(parseInt(index), examId);
-                        }
-                    }
-                    
-                    // Show update notification
-                    showUpdateNotification();
+            const results = await Promise.all(promises);
+            
+            // Combine all exam data from all batches
+            let allExams = [];
+            results.forEach(data => {
+                if (data.success && data.data) {
+                    allExams = allExams.concat(data.data);
                 }
+            });
+            
+            // Sort by exam date
+            allExams = allExams.sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date));
+            
+            const oldData = JSON.stringify(examsData);
+            const newData = JSON.stringify(allExams);
+            
+            if (oldData !== newData) {
+                console.log('✨ New data detected! Updating...');
+                examsData = allExams;
+                
+                // Re-render cards
+                renderExamCards(user);
+                
+                // Re-load expanded exam details
+                for (let index in isExpanded) {
+                    if (isExpanded[index]) {
+                        const examId = examsData[index].id;
+                        await loadExamDetails(parseInt(index), examId);
+                    }
+                }
+                
+                // Show update notification
+                showUpdateNotification();
             }
         } catch (err) {
             console.error('Error refreshing data:', err);

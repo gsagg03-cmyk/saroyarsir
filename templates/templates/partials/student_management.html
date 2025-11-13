@@ -113,8 +113,14 @@
                                 <div class="text-xs text-gray-700 max-w-[120px] truncate" x-text="student.address || 'No address'"></div>
                             </td>
                             <!-- Batch -->
-                            <td class="px-3 py-4 whitespace-nowrap">
-                                <span class="text-xs text-gray-900" x-text="student.batch ? student.batch.name : 'No batch'"></span>
+                            <td class="px-3 py-4">
+                                <!-- Show all batches with badges -->
+                                <div x-show="student.batches && student.batches.length > 0" class="flex flex-wrap gap-1 max-w-[180px]">
+                                    <template x-for="batch in student.batches" :key="batch.id">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="batch.name"></span>
+                                    </template>
+                                </div>
+                                <span x-show="!student.batches || student.batches.length === 0" class="text-xs text-gray-400">No batch</span>
                             </td>
                             <!-- Login Password with Show/Hide Button -->
                             <td class="px-3 py-4 whitespace-nowrap" x-data="{ showPassword: false }">
