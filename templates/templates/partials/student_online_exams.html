@@ -1,462 +1,299 @@
-<!-- Student Online Exams Partial v2.1 (Simple & Direct - No confirmations!) -->
-<div x-data="studentOnlineExams()" x-init="init(); console.log('🎯 student_online_exams partial init triggered');" class="space-y-6">
-    <!-- Add MathJax for scientific equations -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    
-    <h2 class="text-2xl font-bold text-gray-900 mb-2">Online Exams
-        <span class="ml-2 align-middle text-xs px-2 py-1 rounded bg-green-100 text-green-700 border border-green-300" title="Exams UI version - Simple direct flow">
-            v2.1
-        </span>
-    </h2>
-    <p class="text-xs text-gray-500 mb-4">📝 Click Start → Answer Questions → Click Submit → See Results!</p>
-
-    <!-- Available Exams - Mobile Optimized -->
-    <div class="grid grid-cols-1 gap-4">
-        <template x-for="exam in exams" :key="exam.id">
-            <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
-                <div class="flex items-start justify-between mb-3">
-                    <div class="flex-1">
-                        <h3 class="text-base md:text-lg font-semibold text-gray-900" x-text="exam.title"></h3>
-                        <p class="text-xs md:text-sm text-gray-600 mt-1">
-                            <i class="fas fa-book mr-1"></i>
-                            <span x-text="exam.class_name + ' - ' + exam.book_name"></span>
-                        </p>
-                        <p class="text-xs md:text-sm text-gray-600">
-                            <i class="fas fa-bookmark mr-1"></i>
-                            <span x-text="exam.chapter_name"></span>
-                        </p>
-                    </div>
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Published
-                    </span>
-                </div>
-
-                <div class="space-y-2 mb-3">
-                    <div class="flex items-center text-xs md:text-sm text-gray-600">
-                        <i class="fas fa-clock w-4 mr-2"></i>
-                        <span x-text="exam.duration + ' minutes'"></span>
-                    </div>
-                    <div class="flex items-center text-xs md:text-sm text-gray-600">
-                        <i class="fas fa-list-ol w-4 mr-2"></i>
-                        <span x-text="exam.total_questions + ' questions'"></span>
-                    </div>
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i class="fas fa-percentage w-4 mr-2"></i>
-                        <span x-text="'Pass: ' + exam.pass_percentage + '%'"></span>
-                    </div>
-                </div>
-
-                <!-- My Attempts Summary -->
-                <div x-show="exam.attempts_count > 0" class="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <p class="text-sm font-medium text-blue-900">
-                        Your attempts: <span x-text="exam.attempts_count"></span>
-                    </p>
-                    <p x-show="exam.best_score !== null" class="text-sm text-blue-700">
-                    Best score: <span x-text="exam.best_score + '%'"></span>
-                </p>
-            </div>
-
-            <button @click="startExam(exam)" 
-                    class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm md:text-base">
-                <i class="fas fa-play mr-2"></i>
-                <span x-text="exam.attempts_count > 0 ? 'Take Again' : 'Start Exam'"></span>
-            </button>
-        </div>
-    </template>
-
-    <!-- No Exams State -->
-    <div x-show="exams.length === 0" class="col-span-full text-center py-12">
-        <i class="fas fa-clipboard-list text-6xl text-gray-300 mb-4"></i>
-        <p class="text-gray-600">No exams available at the moment</p>
-        <p class="text-xs text-gray-400 mt-2">Student Exams UI v1.3 - Modal & Submit Fixed</p>
+<!-- Student Online Exams - Simple Module v3.0 -->
+<div class="bg-white shadow-lg rounded-lg p-6">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">📝 Online Exams</h2>
+        <p class="text-gray-600">Take MCQ exams and see instant results</p>
     </div>
-</div>
 
-<!-- Exam Taking Modal - Mobile Optimized -->
-<div x-show="activeExam !== null" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;" x-cloak>
-    <div class="flex items-start md:items-center justify-center min-h-screen p-2 md:p-4">
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-75" @click="confirmExit()"></div>
-        
-        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all w-full max-w-2xl relative z-10 my-4">
-            <!-- Exam Header - Mobile Optimized -->
-            <div class="bg-indigo-600 text-white px-3 md:px-6 py-3 md:py-4 sticky top-0 z-20">
-                <div class="flex justify-between items-center">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-base md:text-xl font-bold truncate" x-text="activeExam?.title"></h3>
-                        <p class="text-xs md:text-sm text-indigo-100 truncate" x-text="activeExam?.chapter_name"></p>
-                    </div>
-                    <div class="text-center ml-2">
-                        <div class="text-xl md:text-3xl font-bold tabular-nums" x-text="formatTime(timeRemaining)"></div>
-                        <div class="text-xs text-indigo-100">Time Left</div>
-                    </div>
-                </div>
-            </div>
+    <!-- Loading State -->
+    <div id="examsLoading" class="text-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading exams...</p>
+    </div>
 
-            <!-- Questions - Mobile Optimized -->
-            <div class="p-3 md:p-6 max-h-[60vh] overflow-y-auto">
-                <template x-for="(question, index) in questions" :key="question.id">
-                    <div class="mb-4 md:mb-6 pb-4 md:pb-6 border-b border-gray-200 last:border-0">
-                        <p class="font-medium text-gray-900 mb-3 md:mb-4 text-sm md:text-base font-bangla">
-                            <span class="font-bold" x-text="(index + 1) + '. '"></span>
-                            <span x-html="renderMath(question.question_text)"></span>
-                        </p>
+    <!-- Exams List -->
+    <div id="examsContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
-                        <div class="space-y-2">
-                            <template x-for="option in ['A', 'B', 'C', 'D']" :key="option">
-                                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
-                                           :class="getAnswer(question.id) === option ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'">
-                                        <input type="radio" 
-                                               :name="'question_' + question.id"
-                                               :value="option"
-                                               @change="saveAnswer(question.id, option)"
-                                               :checked="getAnswer(question.id) === option"
-                                               class="mr-2 md:mr-3">
-                                        <span class="font-medium mr-1 md:mr-2" x-text="option + '.'"></span>
-                                        <span class="text-sm md:text-base font-bangla" x-html="renderMath(question['option_' + option.toLowerCase()])"></span>
-                                    </label>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Footer - Mobile Optimized -->
-                <div class="bg-gray-50 px-3 md:px-6 py-3 md:py-4 flex justify-between items-center sticky bottom-0 border-t">
-                    <div class="text-xs md:text-sm text-gray-600">
-                        <span x-text="getAnsweredCount()"></span>/<span x-text="questions.length"></span> answered
-                    </div>
-                    <div class="space-x-2">
-                        <button @click="confirmExit()" class="px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 text-xs md:text-sm">
-                            Exit
-                        </button>
-                        <button @click="submitExam()" class="px-4 md:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs md:text-sm font-semibold">
-                            Submit
-                        </button>
-                    </div>
-                </div>
+    <!-- Exam Taking Modal -->
+    <div id="examModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg w-full max-w-3xl">
+                <!-- Modal content will be inserted here -->
             </div>
         </div>
     </div>
 
-    <!-- Results Modal - Mobile Optimized -->
-    <div x-show="showResults" class="fixed inset-0 z-[10000] overflow-y-auto" style="display: none;" x-cloak>
-        <div class="flex items-center justify-center min-h-screen p-2 md:p-4">
-            <div class="fixed inset-0 bg-gray-900 bg-opacity-75"></div>
-            
-            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all w-full max-w-md relative z-10">
-                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-8 text-center">
-                    <h3 class="text-2xl font-bold mb-2">Exam Results</h3>
-                    <div class="text-6xl font-bold my-4" x-text="results?.percentage + '%'"></div>
-                    <p class="text-xl" x-text="results?.is_passed ? '🎉 Passed!' : 'Keep trying!'"></p>
-                </div>
-
-                <div class="p-6">
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="text-center p-4 bg-gray-50 rounded-lg">
-                            <div class="text-2xl font-bold text-gray-900" x-text="results?.score"></div>
-                            <div class="text-sm text-gray-600">Correct Answers</div>
-                        </div>
-                        <div class="text-center p-4 bg-gray-50 rounded-lg">
-                            <div class="text-2xl font-bold text-gray-900" x-text="results?.total_marks"></div>
-                            <div class="text-sm text-gray-600">Total Questions</div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3">
-                        <p class="text-sm text-gray-600">
-                            <i class="fas fa-clock mr-2"></i>
-                            Time taken: <span x-text="results?.time_taken"></span>
-                        </p>
-                        <p x-show="results?.auto_submitted" class="text-sm text-orange-600">
-                            <i class="fas fa-exclamation-circle mr-2"></i>
-                            Auto-submitted (time expired)
-                        </p>
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 px-6 py-4 flex justify-end">
-                    <button @click="closeResults()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                        Close
-                    </button>
-                </div>
+    <!-- Results Modal -->
+    <div id="resultsModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg w-full max-w-md">
+                <!-- Results content will be inserted here -->
             </div>
         </div>
     </div>
-
 </div>
 
 <script>
-function studentOnlineExams() {
-    return {
-        exams: [],
-        activeExam: null,
-        attemptId: null,
-        questions: [],
-        answers: {},
-        timeRemaining: 0,
-        timer: null,
-        showResults: false,
-        results: null,
-        isSubmitting: false,
+// Online Exams Module v3.0 - Simple JavaScript (No Alpine.js)
+console.log('📝 Online Exams Module v3.0');
 
-        async init() {
-            console.log('🧪 studentOnlineExams.init() start');
-            // expose reference for dashboard to trigger reload on tab switch
-            try { window.studentOnlineExamsComp = this; } catch (e) {}
-            await this.loadExams();
-            console.log('🧪 Exams loaded count:', this.exams.length);
-        },
+window.onlineExamsState = {
+    allExams: [],
+    activeExam: null,
+    attemptId: null,
+    questions: [],
+    answers: {},
+    timeRemaining: 0,
+    timer: null,
+    isSubmitting: false
+};
 
-        // Render mathematical equations
-        renderMath(text) {
-            if (!text) return '';
-            // Replace $$ with proper delimiters for MathJax
-            return text.replace(/\$\$(.*?)\$\$/g, '\\($1\\)');
-        },
-
-        async loadExams() {
-            try {
-                console.log('📡 Fetching /api/online-exams ...');
-                const response = await fetch('/api/online-exams', {credentials: 'same-origin'});
-                console.log('📡 Status:', response.status);
-                const payload = await response.json();
-                console.log('📡 Response JSON:', payload);
-                // Normalize payload to array
-                let list = [];
-                if (payload && payload.success && Array.isArray(payload.data)) {
-                    list = payload.data;
-                } else if (Array.isArray(payload)) {
-                    list = payload;
-                } else if (payload && Array.isArray(payload.exams)) {
-                    list = payload.exams;
-                } else {
-                    console.warn('⚠️ Unexpected exams response shape; keys:', Object.keys(payload || {}));
-                }
-
-                // Students only see published and active exams
-                this.exams = (list || []).filter(exam => exam.is_published !== false && exam.is_active !== false);
-                console.log('✅ Published exams for student:', this.exams.length);
-            } catch (error) {
-                console.error('Failed to load exams:', error);
+window.loadOnlineExams = function() {
+    console.log('📡 Loading online exams...');
+    fetch('/api/online-exams', {credentials: 'same-origin'})
+        .then(function(response) {
+            console.log('📡 Response status:', response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            console.log('📡 Data:', data);
+            if (data.success && data.data) {
+                window.onlineExamsState.allExams = data.data;
+                console.log('✅ Loaded', data.data.length, 'exams');
+                renderExams();
             }
-        },
+            document.getElementById('examsLoading').classList.add('hidden');
+            document.getElementById('examsContainer').classList.remove('hidden');
+        })
+        .catch(function(error) {
+            console.error('❌ Error:', error);
+            document.getElementById('examsLoading').innerHTML = '<p class="text-red-600">Failed to load exams</p>';
+        });
+};
 
-        async startExam(exam) {
-            console.log('🎬 Starting exam:', exam.title, 'ID:', exam.id);
-            
-            // Prevent starting if already taking an exam
-            if (this.activeExam !== null) {
-                console.warn('⚠️ Cannot start - already taking exam:', this.activeExam.title);
-                alert('Please complete or exit the current exam first.');
-                return;
+function renderExams() {
+    var container = document.getElementById('examsContainer');
+    var exams = window.onlineExamsState.allExams;
+    
+    if (exams.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500"><p>No exams available</p></div>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < exams.length; i++) {
+        var exam = exams[i];
+        html += '<div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">';
+        html += '<h3 class="font-bold text-lg text-gray-900 mb-2">' + exam.title + '</h3>';
+        html += '<p class="text-sm text-gray-600 mb-2">' + exam.class_name + ' • ' + exam.chapter_name + '</p>';
+        html += '<div class="space-y-1 text-sm text-gray-700 mb-4">';
+        html += '<p><i class="fas fa-clock text-indigo-600"></i> ' + exam.duration + ' minutes</p>';
+        html += '<p><i class="fas fa-question-circle text-indigo-600"></i> ' + exam.total_questions + ' questions</p>';
+        html += '<p><i class="fas fa-trophy text-indigo-600"></i> Pass: ' + exam.pass_percentage + '%</p>';
+        if (exam.attempts_count > 0) {
+            html += '<p class="text-green-600"><i class="fas fa-check-circle"></i> Attempts: ' + exam.attempts_count;
+            if (exam.best_score !== null) {
+                html += ' (Best: ' + exam.best_score + '%)';
             }
-
-            try {
-                console.log('📡 Fetching /api/online-exams/' + exam.id + '/start');
-                const response = await fetch(`/api/online-exams/${exam.id}/start`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin'
-                });
-                
-                console.log('📡 Start exam response status:', response.status);
-                const data = await response.json();
-                console.log('📡 Start exam data:', data);
-                
-                if (data.success) {
-                    this.activeExam = exam;
-                    this.attemptId = data.data.attempt_id;
-                    this.questions = data.data.questions;
-                    this.timeRemaining = exam.duration * 60; // Convert to seconds
-                    this.answers = {};
-                    this.isSubmitting = false;
-                    
-                    console.log('✅ Exam started successfully');
-                    console.log('  - Attempt ID:', this.attemptId);
-                    console.log('  - Questions:', this.questions.length);
-                    console.log('  - Duration:', exam.duration, 'minutes');
-                    
-                    this.startTimer();
-                    
-                    // Render MathJax after questions load
-                    setTimeout(() => {
-                        if (window.MathJax) {
-                            MathJax.typesetPromise();
-                            console.log('✅ MathJax rendered');
-                        }
-                    }, 100);
-                } else {
-                    console.error('❌ Failed to start exam:', data.message);
-                    alert('Error: ' + (data.message || 'Failed to start exam'));
-                }
-            } catch (error) {
-                console.error('❌ Exception starting exam:', error);
-                alert('Failed to start exam: ' + error.message);
-            }
-        },
-
-        startTimer() {
-            // Clear any existing timer first
-            if (this.timer) {
-                clearInterval(this.timer);
-            }
-            
-            this.timer = setInterval(() => {
-                this.timeRemaining--;
-                if (this.timeRemaining <= 0) {
-                    this.autoSubmit();
-                }
-            }, 1000);
-        },
-
-        formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        },
-
-        async saveAnswer(questionId, answer) {
-            this.answers[questionId] = answer;
-            
-            try {
-                await fetch(`/api/online-exams/attempts/${this.attemptId}/answer`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        question_id: questionId,
-                        selected_answer: answer
-                    })
-                });
-            } catch (error) {
-                console.error('Failed to save answer:', error);
-            }
-        },
-
-        getAnswer(questionId) {
-            return this.answers[questionId] || null;
-        },
-
-        getAnsweredCount() {
-            return Object.keys(this.answers).length;
-        },
-
-        async submitExam() {
-            console.log('📤 Submit exam clicked');
-            
-            // Prevent double submission
-            if (this.isSubmitting) {
-                console.warn('⚠️ Already submitting, ignoring duplicate click');
-                return;
-            }
-
-            const answeredCount = this.getAnsweredCount();
-            const totalQuestions = this.questions.length;
-            
-            console.log('📊 Answered:', answeredCount, '/', totalQuestions);
-
-            this.isSubmitting = true;
-            console.log('🔒 Setting isSubmitting = true');
-            
-            // Stop the timer
-            if (this.timer) {
-                clearInterval(this.timer);
-                this.timer = null;
-                console.log('⏹️ Timer stopped');
-            }
-
-            try {
-                console.log('📡 Submitting to /api/online-exams/attempts/' + this.attemptId + '/submit');
-                const response = await fetch(`/api/online-exams/attempts/${this.attemptId}/submit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin'
-                });
-                
-                console.log('📡 Submit response status:', response.status);
-                const data = await response.json();
-                console.log('📡 Submit data:', data);
-                
-                if (data.success) {
-                    console.log('✅ Exam submitted successfully');
-                    this.results = data.data;
-                    this.showResults = true;
-                    this.resetExam();
-                } else {
-                    console.error('❌ Submit failed:', data.message);
-                    alert('Error: ' + (data.message || 'Failed to submit'));
-                    this.isSubmitting = false;
-                }
-            } catch (error) {
-                console.error('❌ Exception submitting exam:', error);
-                alert('Failed to submit exam: ' + error.message);
-                this.isSubmitting = false;
-            }
-        },
-
-        async autoSubmit() {
-            // Prevent double submission
-            if (this.isSubmitting) {
-                return;
-            }
-
-            this.isSubmitting = true;
-
-            // Stop the timer
-            if (this.timer) {
-                clearInterval(this.timer);
-                this.timer = null;
-            }
-            
-            try {
-                const response = await fetch(`/api/online-exams/attempts/${this.attemptId}/submit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ auto_submit: true })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    this.results = data.data;
-                    this.showResults = true;
-                    this.resetExam();
-                    this.loadExams(); // Refresh exam list
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Failed to auto-submit exam:', error);
-                alert('Time is up! Your exam has been submitted.');
-                this.resetExam();
-            }
-        },
-
-        resetExam() {
-            this.activeExam = null;
-            this.attemptId = null;
-            this.questions = [];
-            this.answers = {};
-            this.timeRemaining = 0;
-            this.isSubmitting = false;
-            
-            if (this.timer) {
-                clearInterval(this.timer);
-                this.timer = null;
-            }
-        },
-
-        confirmExit() {
-            if (confirm('Are you sure you want to exit? Your progress will be lost.')) {
-                this.resetExam();
-            }
-        },
-
-        closeResults() {
-            this.showResults = false;
-            this.results = null;
+            html += '</p>';
         }
-    };
+        html += '</div>';
+        html += '<button onclick="startExam(' + exam.id + ')" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">';
+        html += '<i class="fas fa-play mr-2"></i>' + (exam.attempts_count > 0 ? 'Take Again' : 'Start Exam');
+        html += '</button>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
 }
+
+window.startExam = function(examId) {
+    console.log('🎬 Starting exam:', examId);
+    
+    fetch('/api/online-exams/' + examId + '/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin'
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        console.log('📡 Start response:', data);
+        if (data.success) {
+            var exam = window.onlineExamsState.allExams.find(function(e) { return e.id === examId; });
+            window.onlineExamsState.activeExam = exam;
+            window.onlineExamsState.attemptId = data.data.attempt_id;
+            window.onlineExamsState.questions = data.data.questions;
+            window.onlineExamsState.timeRemaining = exam.duration * 60;
+            window.onlineExamsState.answers = {};
+            showExamModal();
+            startTimer();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(function(error) {
+        console.error('❌ Error:', error);
+        alert('Failed to start exam');
+    });
+};
+
+function showExamModal() {
+    var state = window.onlineExamsState;
+    var modal = document.getElementById('examModal');
+    
+    var html = '<div class="bg-indigo-600 text-white px-6 py-4">';
+    html += '<div class="flex justify-between items-center">';
+    html += '<div><h3 class="text-xl font-bold">' + state.activeExam.title + '</h3>';
+    html += '<p class="text-sm">' + state.activeExam.chapter_name + '</p></div>';
+    html += '<div class="text-center"><div id="timer" class="text-3xl font-bold">30:00</div>';
+    html += '<p class="text-xs">Time Left</p></div></div></div>';
+    
+    html += '<div class="p-6 max-h-96 overflow-y-auto">';
+    for (var i = 0; i < state.questions.length; i++) {
+        var q = state.questions[i];
+        html += '<div class="mb-6 pb-6 border-b">';
+        html += '<p class="font-semibold mb-3">' + (i + 1) + '. ' + q.question_text + '</p>';
+        html += '<div class="space-y-2">';
+        html += createOption(q.id, 'A', q.option_a);
+        html += createOption(q.id, 'B', q.option_b);
+        html += createOption(q.id, 'C', q.option_c);
+        html += createOption(q.id, 'D', q.option_d);
+        html += '</div></div>';
+    }
+    html += '</div>';
+    
+    html += '<div class="bg-gray-50 px-6 py-4 flex justify-between items-center">';
+    html += '<p class="text-sm text-gray-600">Answered: <span id="answeredCount">0</span>/' + state.questions.length + '</p>';
+    html += '<div class="space-x-2">';
+    html += '<button onclick="exitExam()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Exit</button>';
+    html += '<button onclick="submitExam()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Submit</button>';
+    html += '</div></div>';
+    
+    modal.querySelector('.bg-white').innerHTML = html;
+    modal.classList.remove('hidden');
+}
+
+function createOption(questionId, option, text) {
+    return '<label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">' +
+           '<input type="radio" name="q' + questionId + '" value="' + option + '" onchange="saveAnswer(' + questionId + ', \'' + option + '\')" class="mr-3">' +
+           '<span>' + option + '. ' + text + '</span></label>';
+}
+
+window.saveAnswer = function(questionId, answer) {
+    window.onlineExamsState.answers[questionId] = answer;
+    var count = Object.keys(window.onlineExamsState.answers).length;
+    document.getElementById('answeredCount').textContent = count;
+    
+    // Save to server
+    fetch('/api/online-exams/attempts/' + window.onlineExamsState.attemptId + '/answer', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({question_id: questionId, selected_answer: answer})
+    });
+};
+
+function startTimer() {
+    var state = window.onlineExamsState;
+    if (state.timer) clearInterval(state.timer);
+    
+    state.timer = setInterval(function() {
+        state.timeRemaining--;
+        var mins = Math.floor(state.timeRemaining / 60);
+        var secs = state.timeRemaining % 60;
+        document.getElementById('timer').textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+        
+        if (state.timeRemaining <= 0) {
+            clearInterval(state.timer);
+            autoSubmit();
+        }
+    }, 1000);
+}
+
+window.submitExam = function() {
+    if (window.onlineExamsState.isSubmitting) return;
+    window.onlineExamsState.isSubmitting = true;
+    
+    if (window.onlineExamsState.timer) clearInterval(window.onlineExamsState.timer);
+    
+    fetch('/api/online-exams/attempts/' + window.onlineExamsState.attemptId + '/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin'
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        console.log('📡 Submit response:', data);
+        if (data.success) {
+            showResults(data.data);
+            document.getElementById('examModal').classList.add('hidden');
+            loadOnlineExams(); // Reload exams list
+        } else {
+            alert('Error: ' + data.message);
+            window.onlineExamsState.isSubmitting = false;
+        }
+    })
+    .catch(function(error) {
+        console.error('❌ Error:', error);
+        alert('Failed to submit exam');
+        window.onlineExamsState.isSubmitting = false;
+    });
+};
+
+function autoSubmit() {
+    fetch('/api/online-exams/attempts/' + window.onlineExamsState.attemptId + '/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({auto_submit: true})
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showResults(data.data);
+            document.getElementById('examModal').classList.add('hidden');
+        }
+    });
+}
+
+window.exitExam = function() {
+    if (confirm('Exit exam? Your progress will be lost.')) {
+        if (window.onlineExamsState.timer) clearInterval(window.onlineExamsState.timer);
+        document.getElementById('examModal').classList.add('hidden');
+        window.onlineExamsState.activeExam = null;
+        window.onlineExamsState.isSubmitting = false;
+    }
+};
+
+function showResults(results) {
+    var modal = document.getElementById('resultsModal');
+    var html = '<div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-8 text-center">';
+    html += '<h3 class="text-2xl font-bold mb-2">Exam Results</h3>';
+    html += '<div class="text-6xl font-bold my-4">' + results.percentage + '%</div>';
+    html += '<p class="text-xl">' + (results.is_passed ? '🎉 Passed!' : 'Keep trying!') + '</p></div>';
+    
+    html += '<div class="p-6">';
+    html += '<div class="grid grid-cols-2 gap-4 mb-6">';
+    html += '<div class="text-center p-4 bg-gray-50 rounded-lg">';
+    html += '<div class="text-2xl font-bold">' + results.score + '</div>';
+    html += '<div class="text-sm text-gray-600">Correct</div></div>';
+    html += '<div class="text-center p-4 bg-gray-50 rounded-lg">';
+    html += '<div class="text-2xl font-bold">' + results.total_marks + '</div>';
+    html += '<div class="text-sm text-gray-600">Total</div></div></div>';
+    html += '<p class="text-sm text-gray-600 mb-2"><i class="fas fa-clock mr-2"></i>Time: ' + results.time_taken + '</p>';
+    html += '</div>';
+    
+    html += '<div class="bg-gray-50 px-6 py-4">';
+    html += '<button onclick="closeResults()" class="w-full px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Close</button>';
+    html += '</div>';
+    
+    modal.querySelector('.bg-white').innerHTML = html;
+    modal.classList.remove('hidden');
+}
+
+window.closeResults = function() {
+    document.getElementById('resultsModal').classList.add('hidden');
+};
+
+// Auto-load when tab is activated
+console.log('📝 Online Exams module ready');
 </script>
