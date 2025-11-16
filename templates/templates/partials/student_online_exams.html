@@ -352,7 +352,8 @@ window.submitExam = function() {
     fetch('/api/online-exams/attempts/' + window.onlineExamsState.attemptId + '/submit', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        body: JSON.stringify({})
     })
     .then(function(response) { 
         console.log('📡 Submit response status:', response.status);
