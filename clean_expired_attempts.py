@@ -14,6 +14,11 @@ def clean_expired_attempts():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
+    # Check what columns exist
+    cursor.execute("PRAGMA table_info(online_exam_attempts)")
+    columns = [row[1] for row in cursor.fetchall()]
+    print(f"Available columns: {columns}")
+    
     # Find expired attempts
     cursor.execute("""
         SELECT a.id, a.exam_id, a.student_id, a.started_at, e.duration
@@ -37,15 +42,12 @@ def clean_expired_attempts():
     if expired:
         print(f"Found {len(expired)} expired attempts to auto-submit")
         
-        # Auto-submit them
+        # Auto-submit them - just mark as submitted
         for attempt_id in expired:
             cursor.execute("""
                 UPDATE online_exam_attempts 
                 SET is_submitted = 1,
-                    submitted_at = ?,
-                    scored_marks = 0,
-                    total_marks = 0,
-                    percentage = 0
+                    submitted_at = ?
                 WHERE id = ?
             """, (now, attempt_id))
             print(f"  ✅ Auto-submitted attempt {attempt_id}")
