@@ -50,24 +50,43 @@ window.onlineExamsState = {
 
 window.loadOnlineExams = function() {
     console.log('📡 Loading online exams...');
+    
+    var loadingEl = document.getElementById('examsLoading');
+    var containerEl = document.getElementById('examsContainer');
+    
+    if (!loadingEl || !containerEl) {
+        console.error('❌ Elements not found');
+        return;
+    }
+    
     fetch('/api/online-exams', {credentials: 'same-origin'})
         .then(function(response) {
             console.log('📡 Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
             return response.json();
         })
         .then(function(data) {
-            console.log('📡 Data:', data);
+            console.log('📡 Data received:', data);
+            
+            loadingEl.classList.add('hidden');
+            containerEl.classList.remove('hidden');
+            
             if (data.success && data.data) {
                 window.onlineExamsState.allExams = data.data;
                 console.log('✅ Loaded', data.data.length, 'exams');
                 renderExams();
+            } else {
+                console.warn('⚠️ No exam data in response');
+                containerEl.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500"><p>No exams available</p></div>';
             }
-            document.getElementById('examsLoading').classList.add('hidden');
-            document.getElementById('examsContainer').classList.remove('hidden');
         })
         .catch(function(error) {
-            console.error('❌ Error:', error);
-            document.getElementById('examsLoading').innerHTML = '<p class="text-red-600">Failed to load exams</p>';
+            console.error('❌ Error loading exams:', error);
+            loadingEl.classList.add('hidden');
+            containerEl.classList.remove('hidden');
+            containerEl.innerHTML = '<div class="col-span-full text-center py-8"><div class="text-red-600"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p class="font-semibold">Failed to load exams</p><p class="text-sm mt-2">' + error.message + '</p><button onclick="loadOnlineExams()" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Retry</button></div></div>';
         });
 };
 
@@ -359,22 +378,13 @@ window.closeResults = function() {
 };
 
 // Auto-load when module loads (fallback if dashboard doesn't trigger)
-console.log('📝 Online Exams module ready');
+console.log('📝 Online Exams module ready - v3.1');
 
-// Try to load exams if section is visible
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        var section = document.getElementById('online-examsSection');
-        if (section && !section.classList.contains('hidden')) {
-            console.log('📝 Online exams section visible on load, loading exams...');
-            setTimeout(function() { loadOnlineExams(); }, 200);
-        }
-    });
-} else {
-    var section = document.getElementById('online-examsSection');
-    if (section && !section.classList.contains('hidden')) {
-        console.log('📝 Online exams section visible, loading exams...');
-        setTimeout(function() { loadOnlineExams(); }, 200);
+// Auto-load exams when script loads (dashboard will show/hide section)
+setTimeout(function() {
+    console.log('📝 Auto-loading exams...');
+    if (typeof window.loadOnlineExams === 'function') {
+        loadOnlineExams();
     }
-}
+}, 500);
 </script>
