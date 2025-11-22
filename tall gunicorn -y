@@ -1,0 +1,14 @@
+[0;1;32m●[0m saro_vps.service - SmartGardenHub Flask Application (Saro Student Management)
+     Loaded: loaded (]8;;file://vmi2823196/etc/systemd/system/saro_vps.service/etc/systemd/system/saro_vps.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Sat 2025-11-15 04:56:51 CET; 43ms ago
+   Main PID: 2287833 (python3)
+      Tasks: 1 (limit: 9483)
+     Memory: 2.0M (peak: 2.0M)
+        CPU: 10ms
+     CGroup: /system.slice/saro_vps.service
+             └─[0;38;5;245m2287833 /usr/bin/python3 -m gunicorn --config gunicorn.conf.py app:app[0m
+
+Nov 15 04:56:51 vmi2823196 systemd[1]: Started saro_vps.service - SmartGardenHub Flask Application (Saro Student Management).
+Nov 15 04:56:51 vmi2823196 python3[2287833]: /usr/bin/python3: No module named gunicorn
+Nov 15 04:56:51 vmi2823196 systemd[1]: [0;1;39m[0;1;31m[0;1;39msaro_vps.service: Main process exited, code=exited, status=1/FAILURE[0m
+Nov 15 04:56:51 vmi2823196 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185msaro_vps.service: Failed with result 'exit-code'.[0m
