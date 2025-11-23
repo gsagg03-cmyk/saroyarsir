@@ -510,7 +510,7 @@ def get_comprehensive_monthly_ranking(exam_id):
                 
                 return success_response('Student comprehensive ranking retrieved', {
                     'monthly_exam': serialize_monthly_exam(monthly_exam),
-                    'individual_exams': [{'id': e.id, 'title': e.title, 'subject': e.subject, 'marks': e.marks} for e in individual_exams],
+                    'individual_exams': [{'id': e.id, 'title': e.title, 'exam_title': e.title, 'subject': e.subject, 'marks': e.marks} for e in individual_exams],
                     'student_position': current_pos,
                     'total_students': len(rankings),
                     'nearby_rankings': nearby_rankings
@@ -521,7 +521,7 @@ def get_comprehensive_monthly_ranking(exam_id):
         # For teachers/admin, return full comprehensive ranking
         return success_response('Comprehensive monthly ranking retrieved', {
             'monthly_exam': serialize_monthly_exam(monthly_exam),
-            'individual_exams': [{'id': e.id, 'title': e.title, 'subject': e.subject, 'marks': e.marks} for e in individual_exams],
+            'individual_exams': [{'id': e.id, 'title': e.title, 'exam_title': e.title, 'subject': e.subject, 'marks': e.marks} for e in individual_exams],
             'rankings': rankings,
             'total_students': len(rankings)
         })

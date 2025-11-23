@@ -100,6 +100,8 @@ def load_monthly_fees():
                 fees_lookup[student_id] = {}
             
             fees_lookup[student_id][month] = {
+                'jf_amount': float(fee.jf_amount) if hasattr(fee, 'jf_amount') and fee.jf_amount else 0,
+                'tf_amount': float(fee.tf_amount) if hasattr(fee, 'tf_amount') and fee.tf_amount else 0,
                 'amount': float(fee.amount),
                 'fee_id': fee.id,
                 'status': fee.status.value,
@@ -124,6 +126,8 @@ def load_monthly_fees():
                 else:
                     # No fee record for this month
                     student_data['months'][str(month)] = {
+                        'jf_amount': 0,
+                        'tf_amount': 0,
                         'amount': 0,
                         'fee_id': None,
                         'status': None,
@@ -183,11 +187,17 @@ def save_monthly_fee():
         batch_id = data.get('batch_id')
         month = data.get('month')
         year = data.get('year')
+        jf_amount = data.get('jf_amount', 0)
+        tf_amount = data.get('tf_amount', 0)
+        
+        # Backward compatibility: if amount is provided, use it
         amount = data.get('amount')
+        if amount is not None and jf_amount == 0 and tf_amount == 0:
+            jf_amount = amount
         
         # Validate required fields
-        if not all([student_id, batch_id, month, year, amount is not None]):
-            return error_response('student_id, batch_id, month, year, and amount are required', 400)
+        if not all([student_id, batch_id, month, year]):
+            return error_response('student_id, batch_id, month, and year are required', 400)
         
         # Validate types and ranges
         try:
@@ -195,7 +205,8 @@ def save_monthly_fee():
             batch_id = int(batch_id)
             month = int(month)
             year = int(year)
-            amount = float(amount)
+            jf_amount = float(jf_amount)
+            tf_amount = float(tf_amount)
         except (ValueError, TypeError):
             return error_response('Invalid data types', 400)
         
@@ -205,8 +216,11 @@ def save_monthly_fee():
         if not (2020 <= year <= 2030):
             return error_response('Year must be between 2020 and 2030', 400)
         
-        if amount < 0:
-            return error_response('Amount cannot be negative', 400)
+        if jf_amount < 0 or tf_amount < 0:
+            return error_response('Amounts cannot be negative', 400)
+        
+        # Calculate total amount for backward compatibility
+        total_amount = jf_amount + tf_amount
         
         # Verify student exists and is active
         student = User.query.filter_by(
@@ -241,8 +255,8 @@ def save_monthly_fee():
         
         if existing_fee:
             # Update or delete existing fee
-            if amount == 0:
-                # Delete fee if amount is zero
+            if total_amount == 0:
+                # Delete fee if both amounts are zero
                 db.session.delete(existing_fee)
                 db.session.commit()
                 return success_response('Fee deleted successfully', {
@@ -253,7 +267,9 @@ def save_monthly_fee():
                 })
             else:
                 # Update existing fee
-                existing_fee.amount = Decimal(str(amount))
+                existing_fee.jf_amount = Decimal(str(jf_amount))
+                existing_fee.tf_amount = Decimal(str(tf_amount))
+                existing_fee.amount = Decimal(str(total_amount))
                 existing_fee.updated_at = datetime.utcnow()
                 db.session.commit()
                 
@@ -263,12 +279,14 @@ def save_monthly_fee():
                     'batch_id': existing_fee.batch_id,
                     'month': month,
                     'year': year,
+                    'jf_amount': float(existing_fee.jf_amount),
+                    'tf_amount': float(existing_fee.tf_amount),
                     'amount': float(existing_fee.amount),
                     'status': existing_fee.status.value
                 })
         else:
             # Create new fee
-            if amount == 0:
+            if total_amount == 0:
                 # Don't create a fee with zero amount
                 return success_response('No fee created (amount is zero)', {
                     'created': False,
@@ -281,7 +299,9 @@ def save_monthly_fee():
                 new_fee = Fee(
                     user_id=student_id,
                     batch_id=batch_id,
-                    amount=Decimal(str(amount)),
+                    jf_amount=Decimal(str(jf_amount)),
+                    tf_amount=Decimal(str(tf_amount)),
+                    amount=Decimal(str(total_amount)),
                     due_date=due_date,
                     status=FeeStatus.PENDING,
                     notes=f'Monthly fee for {calendar.month_name[month]} {year}'
@@ -296,6 +316,8 @@ def save_monthly_fee():
                     'batch_id': new_fee.batch_id,
                     'month': month,
                     'year': year,
+                    'jf_amount': float(new_fee.jf_amount),
+                    'tf_amount': float(new_fee.tf_amount),
                     'amount': float(new_fee.amount),
                     'status': new_fee.status.value
                 }, 201)

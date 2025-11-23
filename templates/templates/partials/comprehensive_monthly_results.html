@@ -117,7 +117,7 @@
                         
                         <!-- Individual Exam Columns -->
                         <template x-for="exam in individualExams" :key="exam.id">
-                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase whitespace-nowrap" x-text="exam.subject"></th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase whitespace-nowrap" x-text="exam.subject + (exam.exam_title ? ' (' + exam.exam_title + ')' : '')"></th>
                         </template>
                         
                         <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Exam Total</th>
@@ -570,9 +570,10 @@ function comprehensiveResults() {
             // Header row (wrapped in quotes to prevent issues)
             let headers = ['Rank', 'Previous Rank', 'Roll Number', 'Student Name', 'Phone'];
             
-            // Add individual exam headers
+            // Add individual exam headers (show subject with exam title)
             this.individualExams.forEach(exam => {
-                headers.push(exam.subject);
+                const headerText = exam.subject + (exam.exam_title ? ' (' + exam.exam_title + ')' : '');
+                headers.push(headerText);
             });
             
             headers.push('Exam Total', 'Attendance', 'Total Obtained', 'Total Marks', 'Percentage', 'Grade');

@@ -153,12 +153,12 @@ def deduct_sms_balance(sms_count):
         
         balance_setting = Settings.query.filter_by(key='sms_balance').first()
         if not balance_setting:
-            # Initialize with default balance
+            # Initialize with 0 balance (super admin will add balance)
             balance_setting = Settings(
                 key='sms_balance',
-                value={'balance': 989},
+                value={'balance': 0},
                 category='sms',
-                description='Current SMS balance'
+                description='Current SMS balance (managed by super admin)'
             )
             db.session.add(balance_setting)
         
@@ -703,12 +703,12 @@ def get_sms_balance():
         # Get balance from settings
         balance_setting = Settings.query.filter_by(key='sms_balance').first()
         if not balance_setting:
-            # Initialize with default balance
+            # Initialize with 0 balance (super admin will add balance)
             balance_setting = Settings(
                 key='sms_balance',
-                value={'balance': 989},
+                value={'balance': 0},
                 category='sms',
-                description='Current SMS balance'
+                description='Current SMS balance (managed by super admin)'
             )
             db.session.add(balance_setting)
             db.session.commit()
@@ -747,12 +747,12 @@ def get_sms_balance_noauth():
         # Get balance from settings
         balance_setting = Settings.query.filter_by(key='sms_balance').first()
         if not balance_setting:
-            # Initialize with default balance
+            # Initialize with 0 balance (super admin will add balance)
             balance_setting = Settings(
                 key='sms_balance',
-                value={'balance': 989},
+                value={'balance': 0},
                 category='sms',
-                description='Current SMS balance'
+                description='Current SMS balance (managed by super admin)'
             )
             db.session.add(balance_setting)
             db.session.commit()
@@ -784,14 +784,15 @@ def get_sms_balance_noauth():
 @login_required
 @require_role(UserRole.SUPER_USER)
 def add_sms_balance():
-    """Add SMS balance to a user (Super user only)"""
+    """Add SMS balance to system-wide balance (Super user only)"""
     try:
+        from models import Settings
+        
         data = request.get_json()
-        user_id = data.get('user_id')
         amount = data.get('amount')
 
-        if not user_id or amount is None:
-            return error_response('User ID and amount are required', 400)
+        if amount is None:
+            return error_response('Amount is required', 400)
 
         try:
             amount = int(amount)
@@ -801,21 +802,30 @@ def add_sms_balance():
         if amount <= 0:
             return error_response('Amount must be a positive integer', 400)
 
-        user = User.query.filter_by(id=user_id, is_active=True).first()
-        if not user:
-            return error_response('User not found', 404)
-
-        if user.role == UserRole.STUDENT:
-            return error_response('Cannot add SMS balance to students', 400)
-
-        user.sms_count = (user.sms_count or 0) + amount
+        # Get or create SMS balance setting
+        balance_setting = Settings.query.filter_by(key='sms_balance').first()
+        if not balance_setting:
+            balance_setting = Settings(
+                key='sms_balance',
+                value={'balance': 0},
+                category='sms',
+                description='Current SMS balance (managed by super admin)'
+            )
+            db.session.add(balance_setting)
+        
+        # Add to current balance
+        current_balance = balance_setting.value.get('balance', 0) if balance_setting.value else 0
+        new_balance = current_balance + amount
+        
+        balance_setting.value = {'balance': new_balance}
         db.session.commit()
 
-        return success_response('SMS balance updated successfully', {
-            'user_id': user.id,
-            'user_name': user.full_name,
-            'new_balance': user.sms_count,
-            'added_amount': amount
+        current_user = get_current_user()
+        return success_response('SMS balance added successfully', {
+            'previous_balance': current_balance,
+            'added_amount': amount,
+            'new_balance': new_balance,
+            'updated_by': current_user.full_name
         })
 
     except Exception as e:

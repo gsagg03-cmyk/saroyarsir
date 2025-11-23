@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JF/TF Fee System - Visual Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 12px;
+        }
+        .demo-table th, .demo-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .demo-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        .demo-table .month-header {
+            background: #f3f4f6;
+        }
+        .jf-col {
+            background: #f0fdf4 !important;
+            color: #15803d;
+        }
+        .tf-col {
+            background: #eff6ff !important;
+            color: #1e40af;
+        }
+        .exam-col {
+            background: #fefce8 !important;
+            color: #a16207;
+        }
+        .other-col {
+            background: #faf5ff !important;
+            color: #7e22ce;
+        }
+        .total-col {
+            background: #dbeafe !important;
+            color: #1e40af;
+            font-weight: bold;
+        }
+        .totals-row {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+        .yearly-total {
+            background: #e5e7eb;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 12px;
+        }
+        .yearly-jf {
+            color: #15803d;
+        }
+        .yearly-tf {
+            color: #1e40af;
+        }
+        .input-demo {
+            width: 60px;
+            padding: 4px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .jf-input {
+            border-color: #86efac;
+        }
+        .tf-input {
+            border-color: #93c5fd;
+        }
+        .feature-box {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .feature-box h3 {
+            margin-top: 0;
+            color: #0369a1;
+        }
+        .key-feature {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 12px;
+        }
+        .navigation-demo {
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .arrow {
+            color: #dc2626;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 JF & TF Fee Management System</h1>
+        
+        <div class="feature-box">
+            <h3>✨ New Features Implemented</h3>
+            <span class="key-feature">Two Columns Per Month (JF + TF)</span>
+            <span class="key-feature">Enter Key Navigation</span>
+            <span class="key-feature">Monthly Totals</span>
+            <span class="key-feature">Yearly Totals</span>
+            <span class="key-feature">Auto-Save</span>
+            <span class="key-feature">Color-Coded Inputs</span>
+        </div>
+
+        <h2>📊 Table Structure Preview</h2>
+        <table class="demo-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 150px;">Student Name</th>
+                    <th colspan="2" class="month-header">Jan</th>
+                    <th colspan="2" class="month-header">Feb</th>
+                    <th colspan="2" class="month-header">Mar</th>
+                    <th rowspan="2" class="exam-col">Exam Fee</th>
+                    <th rowspan="2" class="other-col">Other Fee</th>
+                    <th rowspan="2" class="total-col">Total</th>
+                </tr>
+                <tr>
+                    <th class="jf-col">JF</th>
+                    <th class="tf-col">TF</th>
+                    <th class="jf-col">JF</th>
+                    <th class="tf-col">TF</th>
+                    <th class="jf-col">JF</th>
+                    <th class="tf-col">TF</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: left; padding-left: 10px;">
+                        <strong>Karim Ahmed</strong><br>
+                        <small style="color: #666;">01712345678</small>
+                    </td>
+                    <td class="jf-col"><input type="number" class="input-demo jf-input" value="500"></td>
+                    <td class="tf-col"><input type="number" class="input-demo tf-input" value="300"></td>
+                    <td class="jf-col"><input type="number" class="input-demo jf-input" value="500"></td>
+                    <td class="tf-col"><input type="number" class="input-demo tf-input" value="300"></td>
+                    <td class="jf-col"><input type="number" class="input-demo jf-input" value="500"></td>
+                    <td class="tf-col"><input type="number" class="input-demo tf-input" value="300"></td>
+                    <td class="exam-col">1000</td>
+                    <td class="other-col">500</td>
+                    <td class="total-col">12400</td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; padding-left: 10px;">
+                        <strong>Fatima Begum</strong><br>
+                        <small style="color: #666;">01812345679</small>
+                    </td>
+                    <td class="jf-col"><input type="number" class="input-demo jf-input" value="600"></td>
+                    <td class="tf-col"><input type="number" class="input-demo tf-input" value="400"></td>
+                    <td class="jf-col"><input type="number" class="input-demo jf-input" value="600"></td>
+                    <td class="tf-col"><input type="number" class="input-demo tf-input" value="400"></td>
+                    <td class="jf-col"><input type="number" class="input-demo jf-input" value="600"></td>
+                    <td class="tf-col"><input type="number" class="input-demo tf-input" value="400"></td>
+                    <td class="exam-col">1200</td>
+                    <td class="other-col">600</td>
+                    <td class="total-col">14800</td>
+                </tr>
+                <tr class="totals-row">
+                    <td style="text-align: right; padding-right: 10px;">Monthly Totals:</td>
+                    <td class="jf-col">1100</td>
+                    <td class="tf-col">700</td>
+                    <td class="jf-col">1100</td>
+                    <td class="tf-col">700</td>
+                    <td class="jf-col">1100</td>
+                    <td class="tf-col">700</td>
+                    <td class="exam-col">2200</td>
+                    <td class="other-col">1100</td>
+                    <td class="total-col">27200</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px;">
+            <div class="yearly-total">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <span class="yearly-jf">Yearly JF Total: 72,000.00 টাকা</span>
+                </div>
+                <div style="text-align: center;">
+                    <span class="yearly-tf">Yearly TF Total: 48,000.00 টাকা</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-demo">
+            <h3 style="margin-top: 0;">⌨️ Keyboard Navigation (Enter Key)</h3>
+            <p style="font-size: 14px; line-height: 1.8;">
+                <strong>Step 1:</strong> Click on <span style="background: #f0fdf4; padding: 2px 8px; border-radius: 4px;">JF (Jan)</span> field<br>
+                <strong>Step 2:</strong> Enter amount and press <kbd style="background: #333; color: white; padding: 2px 8px; border-radius: 3px;">Enter</kbd><br>
+                <strong>Step 3:</strong> Cursor moves to <span class="arrow">→</span> <span style="background: #eff6ff; padding: 2px 8px; border-radius: 4px;">TF (Jan)</span><br>
+                <strong>Step 4:</strong> Enter amount and press <kbd style="background: #333; color: white; padding: 2px 8px; border-radius: 3px;">Enter</kbd><br>
+                <strong>Step 5:</strong> Cursor moves to <span class="arrow">→</span> <span style="background: #f0fdf4; padding: 2px 8px; border-radius: 4px;">JF (Feb)</span><br>
+                <strong>...</strong> continues for all 12 months<br>
+                <strong>After Dec TF:</strong> Cursor moves to <span class="arrow">↓</span> Next student's <span style="background: #f0fdf4; padding: 2px 8px; border-radius: 4px;">JF (Jan)</span>
+            </p>
+            <p style="color: #059669; font-weight: bold; margin-top: 15px;">
+                ✓ This creates a smooth column-wise data entry flow!
+            </p>
+        </div>
+
+        <h2>🎨 Color Legend</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+            <div style="padding: 15px; background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px;">
+                <strong style="color: #15803d;">JF (জানুয়ারি ফি)</strong><br>
+                <small>Green background & borders</small>
+            </div>
+            <div style="padding: 15px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                <strong style="color: #1e40af;">TF (টিউশন ফি)</strong><br>
+                <small>Blue background & borders</small>
+            </div>
+            <div style="padding: 15px; background: #fefce8; border-left: 4px solid #eab308; border-radius: 4px;">
+                <strong style="color: #a16207;">Exam Fee</strong><br>
+                <small>Yellow background</small>
+            </div>
+            <div style="padding: 15px; background: #faf5ff; border-left: 4px solid #a855f7; border-radius: 4px;">
+                <strong style="color: #7e22ce;">Other Fee</strong><br>
+                <small>Purple background</small>
+            </div>
+        </div>
+
+        <h2>💾 How It Saves</h2>
+        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <p><strong>Database Structure:</strong></p>
+            <pre style="background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 6px; overflow-x: auto;">
+fees table:
+├── id
+├── user_id (student)
+├── batch_id
+├── jf_amount     <span style="color: #22c55e;">← NEW: JF amount</span>
+├── tf_amount     <span style="color: #3b82f6;">← NEW: TF amount</span>
+├── amount        (jf_amount + tf_amount)
+├── due_date      (month/year)
+└── status        (pending/paid/overdue)</pre>
+            
+            <p style="margin-top: 15px;"><strong>Save Process:</strong></p>
+            <ol style="line-height: 1.8;">
+                <li>You enter JF and TF amounts in the table</li>
+                <li>System auto-calculates total (JF + TF)</li>
+                <li>Click "Save All Changes" button</li>
+                <li>Backend API receives both amounts</li>
+                <li>Database stores them in separate columns</li>
+                <li>You can edit/update anytime</li>
+            </ol>
+        </div>
+
+        <h2>📈 Benefits</h2>
+        <ul style="line-height: 2;">
+            <li>✓ Track JF and TF separately for better fee analysis</li>
+            <li>✓ See monthly breakdown of each fee type</li>
+            <li>✓ Calculate yearly totals for JF and TF independently</li>
+            <li>✓ Fast data entry with Enter key navigation</li>
+            <li>✓ Color-coded interface reduces errors</li>
+            <li>✓ Automatic total calculations</li>
+            <li>✓ Mobile-friendly responsive design</li>
+        </ul>
+
+        <div style="background: #dcfce7; border: 2px solid #22c55e; padding: 20px; border-radius: 8px; margin-top: 30px;">
+            <h3 style="color: #15803d; margin-top: 0;">✅ Implementation Complete!</h3>
+            <p style="color: #166534; margin-bottom: 0;">
+                The JF/TF fee system is now fully implemented and ready to use. 
+                All data is properly saved in the database, and you can start entering fees immediately.
+                The Enter key navigation will move through fields column-wise as requested.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

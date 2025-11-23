@@ -81,7 +81,7 @@
                     </div>
 
                     <!-- Live Statistics -->
-                    <div x-show="attendanceStudents.length > 0" class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div x-show="attendanceStudents.length > 0" class="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-4">
                         <div class="bg-white p-4 rounded-lg text-center shadow-sm border">
                             <div class="text-2xl font-bold text-blue-600" x-text="attendanceStudents.length"></div>
                             <div class="text-sm text-gray-600">Total Students</div>
@@ -93,6 +93,10 @@
                         <div class="bg-white p-4 rounded-lg text-center shadow-sm border">
                             <div class="text-2xl font-bold text-red-600" x-text="absentCount"></div>
                             <div class="text-sm text-gray-600">Absent</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg text-center shadow-sm border">
+                            <div class="text-2xl font-bold text-orange-600" x-text="holidayCount"></div>
+                            <div class="text-sm text-gray-600">Holiday</div>
                         </div>
                         <div class="bg-white p-4 rounded-lg text-center shadow-sm border">
                             <div class="text-2xl font-bold text-purple-600" x-text="attendancePercentage + '%'"></div>
@@ -143,6 +147,12 @@
                             >
                                 <i class="fas fa-times-circle mr-2"></i>Mark All Absent
                             </button>
+                            <button 
+                                @click="markAllHoliday()" 
+                                class="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                            >
+                                <i class="fas fa-calendar mr-2"></i>Mark All Holiday
+                            </button>
                         </div>
                     </div>
 
@@ -170,30 +180,42 @@
                                     <!-- Status Badge -->
                                     <div class="flex-shrink-0">
                                         <span 
-                                            :class="student.status === 'present' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'"
+                                            :class="{
+                                                'bg-green-100 text-green-800 border-green-200': student.status === 'present',
+                                                'bg-red-100 text-red-800 border-red-200': student.status === 'absent',
+                                                'bg-orange-100 text-orange-800 border-orange-200': student.status === 'holiday'
+                                            }"
                                             class="inline-flex px-3 py-1 text-xs font-semibold rounded-full border"
-                                            x-text="student.status === 'present' ? 'Present' : 'Absent'"
+                                            x-text="student.status === 'present' ? 'Present' : student.status === 'holiday' ? 'Holiday' : 'Absent'"
                                         ></span>
                                     </div>
                                 </div>
 
                                 <!-- Attendance Toggle Buttons -->
-                                <div class="flex space-x-3">
+                                <div class="grid grid-cols-3 gap-2">
                                     <button 
                                         @click="markAttendance(student, 'present')"
                                         :class="student.status === 'present' ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700'"
-                                        class="flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border"
+                                        class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 border"
                                         :disabled="saving"
                                     >
-                                        <i class="fas fa-check mr-2"></i>Present
+                                        <i class="fas fa-check"></i><br>P
                                     </button>
                                     <button 
                                         @click="markAttendance(student, 'absent')"
                                         :class="student.status === 'absent' ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700'"
-                                        class="flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border"
+                                        class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 border"
                                         :disabled="saving"
                                     >
-                                        <i class="fas fa-times mr-2"></i>Absent
+                                        <i class="fas fa-times"></i><br>A
+                                    </button>
+                                    <button 
+                                        @click="markAttendance(student, 'holiday')"
+                                        :class="student.status === 'holiday' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-700'"
+                                        class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 border"
+                                        :disabled="saving"
+                                    >
+                                        <i class="fas fa-calendar"></i><br>H
                                     </button>
                                 </div>
                             </div>
@@ -354,6 +376,7 @@
                                     <template x-for="day in monthlyData.days" :key="day">
                                         <div class="text-center">
                                             <div class="text-xs text-gray-500 mb-1" x-text="day"></div>
+                                            <div class="text-xs text-gray-400 mb-1" x-text="getDayName(day, selectedMonth, selectedYear, true)"></div>
                                             <div 
                                                 class="w-8 h-8 rounded-full text-xs flex items-center justify-center font-medium"
                                                 :class="getAttendanceClass(student.attendance && student.attendance[day])"
@@ -375,7 +398,10 @@
                                         Student Name
                                     </th>
                                     <template x-for="day in monthlyData.days" :key="day">
-                                        <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-10" x-text="day"></th>
+                                        <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-16">
+                                            <div x-text="day"></div>
+                                            <div class="text-xs font-normal text-gray-400" x-text="getDayName(day, selectedMonth, selectedYear)"></div>
+                                        </th>
                                     </template>
                                 </tr>
                             </thead>

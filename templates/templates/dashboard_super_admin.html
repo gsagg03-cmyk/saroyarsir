@@ -189,6 +189,9 @@ function superAdminDashboard() {
         selectedTeacher: '',
         creditsToAdd: '',
         adding: false,
+        systemSmsBalance: 0,
+        systemCreditsToAdd: '',
+        addingSystemBalance: false,
         smsStats: {
             totalCreditsDistributed: 0,
             totalCreditsUsed: 0,
@@ -209,6 +212,7 @@ function superAdminDashboard() {
             this.loadStats();
             this.loadTeachers();
             this.loadSMSStats();
+            this.loadSystemSmsBalance();
         },
 
         async loadStats() {
@@ -321,6 +325,63 @@ function superAdminDashboard() {
         formatDate(dateString) {
             if (!dateString) return 'Never';
             return new Date(dateString).toLocaleDateString();
+        },
+
+        async loadSystemSmsBalance() {
+            try {
+                const response = await fetch('/api/sms/balance', {
+                    credentials: 'same-origin'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    this.systemSmsBalance = data.data.balance || 0;
+                    console.log('System SMS Balance loaded:', this.systemSmsBalance);
+                }
+            } catch (error) {
+                console.error('Failed to load system SMS balance:', error);
+                this.systemSmsBalance = 0;
+            }
+        },
+
+        async addSystemSMSBalance() {
+            if (!this.systemCreditsToAdd || this.systemCreditsToAdd <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            this.addingSystemBalance = true;
+            try {
+                const response = await fetch('/api/sms/balance/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        amount: parseInt(this.systemCreditsToAdd)
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Successfully added ${this.systemCreditsToAdd} SMS credits!\\nNew Balance: ${data.data.new_balance}`);
+                    this.systemCreditsToAdd = '';
+                    await this.loadSystemSmsBalance();
+                } else {
+                    const error = await response.json();
+                    alert(`Failed to add credits: ${error.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Failed to add system SMS balance:', error);
+                alert('Failed to add SMS credits. Please try again.');
+            } finally {
+                this.addingSystemBalance = false;
+            }
+        },
+
+        async quickAddSystemBalance(amount) {
+            this.systemCreditsToAdd = amount;
+            await this.addSystemSMSBalance();
         },
 
         viewAllTeachers() {

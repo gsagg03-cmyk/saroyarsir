@@ -22,6 +22,7 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration with SQLite"""
     DEBUG = True
+    TEMPLATES_AUTO_RELOAD = True  # Auto-reload templates in development
     
     # SQLite database for development
     base_dir = Path(__file__).parent

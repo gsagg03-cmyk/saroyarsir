@@ -751,19 +751,50 @@ function teacherDashboard() {
             }
 
             try {
-                // Generate CSV content
-                const headers = ['Rank', 'Student Name', 'Phone', 'Total Marks', 'Percentage', 'Grade', 'GPA'];
+                // Get exam subjects/names from the first result
+                const firstResult = this.monthlyResults[0];
+                const examHeaders = [];
+                
+                // Extract individual exam names from individual_marks object
+                if (firstResult.individual_marks && typeof firstResult.individual_marks === 'object') {
+                    Object.values(firstResult.individual_marks).forEach(exam => {
+                        const examName = exam.exam_title || exam.subject || 'Exam';
+                        examHeaders.push(examName);
+                    });
+                }
+                
+                // Build headers: basic info + individual exams + totals
+                const headers = ['Rank', 'Student Name', 'Phone', ...examHeaders, 'Total Marks', 'Percentage', 'Grade', 'GPA'];
+                
                 const csvContent = [
                     headers.join(','),
-                    ...this.monthlyResults.map((result) => [
-                        result.position,
-                        `"${result.student_name || 'N/A'}"`,
-                        result.student_phone || 'N/A',
-                        `${result.total_obtained}/${result.total_marks}`,
-                        `${result.percentage.toFixed(1)}%`,
-                        result.grade,
-                        result.gpa
-                    ].join(','))
+                    ...this.monthlyResults.map((result) => {
+                        const row = [
+                            result.position,
+                            `"${result.student_name || 'N/A'}"`,
+                            result.student_phone || 'N/A'
+                        ];
+                        
+                        // Add individual exam marks from individual_marks object
+                        if (result.individual_marks && typeof result.individual_marks === 'object') {
+                            Object.values(result.individual_marks).forEach(exam => {
+                                row.push(`${exam.marks_obtained || 0}/${exam.total_marks || 0}`);
+                            });
+                        } else {
+                            // Fill with N/A if no marks data
+                            examHeaders.forEach(() => row.push('N/A'));
+                        }
+                        
+                        // Add totals
+                        row.push(
+                            `${result.total_obtained}/${result.total_marks}`,
+                            `${result.percentage.toFixed(1)}%`,
+                            result.grade,
+                            result.gpa
+                        );
+                        
+                        return row.join(',');
+                    })
                 ].join('\n');
 
                 // Create and download file
@@ -879,6 +910,10 @@ function attendanceManager() {
 
         get absentCount() {
             return this.attendanceStudents.filter(s => s.status === 'absent').length;
+        },
+
+        get holidayCount() {
+            return this.attendanceStudents.filter(s => s.status === 'holiday').length;
         },
 
         get attendancePercentage() {
@@ -1143,6 +1178,20 @@ function attendanceManager() {
             });
         },
 
+        // Mark all students absent
+        markAllAbsent() {
+            this.attendanceStudents.forEach(student => {
+                student.status = 'absent';
+            });
+        },
+
+        // Mark all students holiday
+        markAllHoliday() {
+            this.attendanceStudents.forEach(student => {
+                student.status = 'holiday';
+            });
+        },
+
         // Save attendance
         async saveAttendance(sendSms = false) {
             if (!this.selectedBatchId || !this.selectedDate || this.attendanceStudents.length === 0) {
@@ -1342,6 +1391,8 @@ function attendanceManager() {
                     return 'bg-red-500 text-white';
                 case 'late':
                     return 'bg-yellow-500 text-white';
+                case 'holiday':
+                    return 'bg-orange-500 text-white';
                 default:
                     return 'bg-gray-200 text-gray-500';
             }
@@ -1356,8 +1407,30 @@ function attendanceManager() {
                     return 'A';
                 case 'late':
                     return 'L';
+                case 'holiday':
+                    return 'H';
                 default:
                     return '-';
+            }
+        },
+
+        // Get day name from date (Sat, Sun, Mon, etc.)
+        getDayName(day, month, year, short = false) {
+            try {
+                // Create date object (month is 1-indexed in our system, but JS Date uses 0-indexed)
+                const date = new Date(year, month - 1, day);
+                
+                if (short) {
+                    // Short format for mobile (Su, Mo, Tu)
+                    const shortDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+                    return shortDays[date.getDay()];
+                } else {
+                    // Full 3-letter format (Sun, Mon, Tue)
+                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    return days[date.getDay()];
+                }
+            } catch (e) {
+                return '-';
             }
         },
 

@@ -1,5 +1,6 @@
-<!-- Fee Management Component - v2.0 Student-Level Extra Fees (Nov 11, 2025) -->
-<div class="space-y-6" x-data="feeManagerNew()" x-init="init()">
+<!-- Fee Management Component - v3.1 JF/TF All Months Full Width (Nov 23, 2025) -->
+<!-- CACHE BUST: 20251123164500 -->
+<div class="space-y-6 -mx-6" x-data="feeManagerNew()" x-init="init()">
     <!-- Header -->
     <div class="flex justify-between items-center">
         <div>
@@ -79,85 +80,175 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                            <th rowspan="2" class="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-300">
                                 Student
                             </th>
-                            <template x-for="month in 12" :key="month">
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap"
-                                    x-text="getMonthName(month)"></th>
-                            </template>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider bg-yellow-100">
-                                Exam Fee
-                            </th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider bg-purple-100">
-                                Other Fee
-                            </th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider bg-blue-100">
+                            <!-- January -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Jan</th>
+                            <!-- February -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Feb</th>
+                            <!-- March -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Mar</th>
+                            <!-- April -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Apr</th>
+                            <!-- May -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">May</th>
+                            <!-- June -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Jun</th>
+                            <!-- July -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Jul</th>
+                            <!-- August -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Aug</th>
+                            <!-- September -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Sep</th>
+                            <!-- October -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Oct</th>
+                            <!-- November -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Nov</th>
+                            <!-- December -->
+                            <th colspan="2" class="px-3 py-2 text-center text-sm font-medium text-gray-700 uppercase border-r border-gray-300">Dec</th>
+                            <th rowspan="2" class="px-4 py-3 text-center text-sm font-medium text-gray-700 uppercase bg-blue-100">
                                 Total
                             </th>
+                        </tr>
+                        <tr>
+                            <!-- Jan JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Feb JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Mar JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Apr JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- May JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Jun JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Jul JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Aug JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Sep JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Oct JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Nov JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
+                            <!-- Dec JF/TF -->
+                            <th class="px-2 py-2 text-center text-xs font-medium text-green-700 bg-green-50 border-r border-gray-200">JF</th>
+                            <th class="px-2 py-2 text-center text-xs font-medium text-blue-700 bg-blue-50 border-r border-gray-300">TF</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <template x-for="(student, index) in students" :key="student.student_id">
                             <tr :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
-                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 z-10"
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 z-10 border-r border-gray-300"
                                     :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
                                     <div>
                                         <div x-text="student.student_name"></div>
                                         <div class="text-xs text-gray-500" x-text="student.phone"></div>
                                     </div>
                                 </td>
-                                <template x-for="month in 12" :key="month">
-                                    <td class="px-2 py-3 text-center">
-                                        <input type="number" 
-                                               :value="getFeeAmount(student.student_id, month)"
-                                               @input="updateFeeAmount(student.student_id, month, $event.target.value)"
-                                               @change="markChanged(student.student_id, month)"
-                                               class="w-20 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               min="0"
-                                               step="0.01">
-                                    </td>
-                                </template>
-                                <td class="px-2 py-3 text-center bg-yellow-50">
-                                    <input type="number" 
-                                           :value="getExamFee(student.student_id)"
-                                           @input="updateExamFee(student.student_id, $event.target.value)"
-                                           @change="markChangedExamFee(student.student_id)"
-                                           class="w-20 px-2 py-1 text-center border border-yellow-300 rounded focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                           min="0"
-                                           step="0.01"
-                                           placeholder="0">
+                                <!-- Month 1 (Jan) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200">
+                                    <input type="number" :id="`jf_${student.student_id}_1`" :value="getJfAmount(student.student_id, 1)" @input="updateJfAmount(student.student_id, 1, $event.target.value)" @change="markChanged(student.student_id, 1)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 1)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0">
                                 </td>
-                                <td class="px-2 py-3 text-center bg-purple-50">
-                                    <input type="number" 
-                                           :value="getOtherFee(student.student_id)"
-                                           @input="updateOtherFee(student.student_id, $event.target.value)"
-                                           @change="markChangedOtherFee(student.student_id)"
-                                           class="w-20 px-2 py-1 text-center border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                           min="0"
-                                           step="0.01"
-                                           placeholder="0">
-                                </td>
-                                <td class="px-4 py-3 text-center font-bold text-blue-600 bg-blue-50"
-                                    x-text="getStudentTotal(student.student_id).toFixed(2)"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_1`" :value="getTfAmount(student.student_id, 1)" @input="updateTfAmount(student.student_id, 1, $event.target.value)" @change="markChanged(student.student_id, 1)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 1)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 2 (Feb) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_2`" :value="getJfAmount(student.student_id, 2)" @input="updateJfAmount(student.student_id, 2, $event.target.value)" @change="markChanged(student.student_id, 2)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 2)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_2`" :value="getTfAmount(student.student_id, 2)" @input="updateTfAmount(student.student_id, 2, $event.target.value)" @change="markChanged(student.student_id, 2)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 2)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 3 (Mar) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_3`" :value="getJfAmount(student.student_id, 3)" @input="updateJfAmount(student.student_id, 3, $event.target.value)" @change="markChanged(student.student_id, 3)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 3)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_3`" :value="getTfAmount(student.student_id, 3)" @input="updateTfAmount(student.student_id, 3, $event.target.value)" @change="markChanged(student.student_id, 3)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 3)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 4 (Apr) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_4`" :value="getJfAmount(student.student_id, 4)" @input="updateJfAmount(student.student_id, 4, $event.target.value)" @change="markChanged(student.student_id, 4)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 4)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_4`" :value="getTfAmount(student.student_id, 4)" @input="updateTfAmount(student.student_id, 4, $event.target.value)" @change="markChanged(student.student_id, 4)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 4)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 5 (May) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_5`" :value="getJfAmount(student.student_id, 5)" @input="updateJfAmount(student.student_id, 5, $event.target.value)" @change="markChanged(student.student_id, 5)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 5)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_5`" :value="getTfAmount(student.student_id, 5)" @input="updateTfAmount(student.student_id, 5, $event.target.value)" @change="markChanged(student.student_id, 5)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 5)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 6 (Jun) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_6`" :value="getJfAmount(student.student_id, 6)" @input="updateJfAmount(student.student_id, 6, $event.target.value)" @change="markChanged(student.student_id, 6)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 6)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_6`" :value="getTfAmount(student.student_id, 6)" @input="updateTfAmount(student.student_id, 6, $event.target.value)" @change="markChanged(student.student_id, 6)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 6)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 7 (Jul) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_7`" :value="getJfAmount(student.student_id, 7)" @input="updateJfAmount(student.student_id, 7, $event.target.value)" @change="markChanged(student.student_id, 7)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 7)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_7`" :value="getTfAmount(student.student_id, 7)" @input="updateTfAmount(student.student_id, 7, $event.target.value)" @change="markChanged(student.student_id, 7)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 7)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 8 (Aug) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_8`" :value="getJfAmount(student.student_id, 8)" @input="updateJfAmount(student.student_id, 8, $event.target.value)" @change="markChanged(student.student_id, 8)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 8)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_8`" :value="getTfAmount(student.student_id, 8)" @input="updateTfAmount(student.student_id, 8, $event.target.value)" @change="markChanged(student.student_id, 8)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 8)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 9 (Sep) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_9`" :value="getJfAmount(student.student_id, 9)" @input="updateJfAmount(student.student_id, 9, $event.target.value)" @change="markChanged(student.student_id, 9)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 9)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_9`" :value="getTfAmount(student.student_id, 9)" @input="updateTfAmount(student.student_id, 9, $event.target.value)" @change="markChanged(student.student_id, 9)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 9)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 10 (Oct) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_10`" :value="getJfAmount(student.student_id, 10)" @input="updateJfAmount(student.student_id, 10, $event.target.value)" @change="markChanged(student.student_id, 10)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 10)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_10`" :value="getTfAmount(student.student_id, 10)" @input="updateTfAmount(student.student_id, 10, $event.target.value)" @change="markChanged(student.student_id, 10)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 10)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 11 (Nov) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_11`" :value="getJfAmount(student.student_id, 11)" @input="updateJfAmount(student.student_id, 11, $event.target.value)" @change="markChanged(student.student_id, 11)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 11)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_11`" :value="getTfAmount(student.student_id, 11)" @input="updateTfAmount(student.student_id, 11, $event.target.value)" @change="markChanged(student.student_id, 11)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 11)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <!-- Month 12 (Dec) -->
+                                <td class="px-1 py-2 text-center border-r border-gray-200"><input type="number" :id="`jf_${student.student_id}_12`" :value="getJfAmount(student.student_id, 12)" @input="updateJfAmount(student.student_id, 12, $event.target.value)" @change="markChanged(student.student_id, 12)" @keydown.enter.prevent="moveToNextField($event, 'jf', student.student_id, 12)" class="w-20 px-2 py-1.5 text-center text-sm border border-green-300 rounded focus:ring-2 focus:ring-green-500 bg-green-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-1 py-2 text-center border-r border-gray-300"><input type="number" :id="`tf_${student.student_id}_12`" :value="getTfAmount(student.student_id, 12)" @input="updateTfAmount(student.student_id, 12, $event.target.value)" @change="markChanged(student.student_id, 12)" @keydown.enter.prevent="moveToNextField($event, 'tf', student.student_id, 12)" class="w-20 px-2 py-1.5 text-center text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 bg-blue-50" min="0" step="0.01" placeholder="0"></td>
+                                <td class="px-4 py-3 text-center font-bold text-blue-600 text-base bg-blue-50" x-text="getStudentTotal(student.student_id).toFixed(2)"></td>
                             </tr>
                         </template>
                     </tbody>
                     <tfoot class="bg-gray-100">
                         <tr>
-                            <td class="px-4 py-3 text-right font-bold text-gray-900 sticky left-0 bg-gray-100 z-10">
+                            <td class="px-4 py-3 text-right font-bold text-gray-900 sticky left-0 bg-gray-100 z-10 border-r border-gray-300">
                                 Monthly Totals:
                             </td>
-                            <template x-for="month in 12" :key="month">
-                                <td class="px-4 py-3 text-center font-bold text-gray-900"
-                                    x-text="getMonthTotal(month).toFixed(2)"></td>
-                            </template>
-                            <td class="px-4 py-3 text-center font-bold text-yellow-700 bg-yellow-50"
-                                x-text="getTotalExamFees().toFixed(2)"></td>
-                            <td class="px-4 py-3 text-center font-bold text-purple-700 bg-purple-50"
-                                x-text="getTotalOtherFees().toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(1).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(1).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(2).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(2).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(3).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(3).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(4).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(4).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(5).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(5).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(6).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(6).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(7).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(7).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(8).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(8).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(9).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(9).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(10).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(10).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(11).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(11).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-green-700 text-sm bg-green-50 border-r border-gray-200" x-text="getMonthJfTotal(12).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-center font-semibold text-blue-700 text-sm bg-blue-50 border-r border-gray-300" x-text="getMonthTfTotal(12).toFixed(2)"></td>
                             <td class="px-4 py-3 text-center font-bold text-blue-600 text-lg bg-blue-100"
                                 x-text="getGrandTotal().toFixed(2)"></td>
+                        </tr>
+                        <tr class="bg-gray-200">
+                            <td class="px-4 py-3 text-right font-bold text-gray-900 sticky left-0 bg-gray-200 z-10 border-r border-gray-300">
+                                Yearly JF Total:
+                            </td>
+                            <td colspan="25" class="px-4 py-3 text-center font-bold text-green-700 text-lg">
+                                <span x-text="getYearlyJfTotal().toFixed(2)"></span> টাকা
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-200">
+                            <td class="px-4 py-3 text-right font-bold text-gray-900 sticky left-0 bg-gray-200 z-10 border-r border-gray-300">
+                                Yearly TF Total:
+                            </td>
+                            <td colspan="25" class="px-4 py-3 text-center font-bold text-blue-700 text-lg">
+                                <span x-text="getYearlyTfTotal().toFixed(2)"></span> টাকা
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
@@ -296,6 +387,24 @@ function feeManagerNew() {
             return 0;
         },
         
+        // Get JF amount for a student and month
+        getJfAmount(studentId, month) {
+            const monthKey = String(month);
+            if (this.fees[studentId] && this.fees[studentId][monthKey]) {
+                return this.fees[studentId][monthKey].jf_amount || 0;
+            }
+            return 0;
+        },
+        
+        // Get TF amount for a student and month
+        getTfAmount(studentId, month) {
+            const monthKey = String(month);
+            if (this.fees[studentId] && this.fees[studentId][monthKey]) {
+                return this.fees[studentId][monthKey].tf_amount || 0;
+            }
+            return 0;
+        },
+        
         // Update fee amount when input changes
         updateFeeAmount(studentId, month, value) {
             const monthKey = String(month);
@@ -307,6 +416,8 @@ function feeManagerNew() {
             
             if (!this.fees[studentId][monthKey]) {
                 this.fees[studentId][monthKey] = {
+                    jf_amount: 0,
+                    tf_amount: 0,
                     amount: 0,
                     fee_id: null,
                     status: null,
@@ -315,6 +426,88 @@ function feeManagerNew() {
             }
             
             this.fees[studentId][monthKey].amount = amount;
+        },
+        
+        // Update JF amount when input changes
+        updateJfAmount(studentId, month, value) {
+            const monthKey = String(month);
+            const amount = parseFloat(value) || 0;
+            
+            if (!this.fees[studentId]) {
+                this.fees[studentId] = {};
+            }
+            
+            if (!this.fees[studentId][monthKey]) {
+                this.fees[studentId][monthKey] = {
+                    jf_amount: 0,
+                    tf_amount: 0,
+                    amount: 0,
+                    fee_id: null,
+                    status: null,
+                    paid_date: null
+                };
+            }
+            
+            this.fees[studentId][monthKey].jf_amount = amount;
+            this.fees[studentId][monthKey].amount = amount + (this.fees[studentId][monthKey].tf_amount || 0);
+        },
+        
+        // Update TF amount when input changes
+        updateTfAmount(studentId, month, value) {
+            const monthKey = String(month);
+            const amount = parseFloat(value) || 0;
+            
+            if (!this.fees[studentId]) {
+                this.fees[studentId] = {};
+            }
+            
+            if (!this.fees[studentId][monthKey]) {
+                this.fees[studentId][monthKey] = {
+                    jf_amount: 0,
+                    tf_amount: 0,
+                    amount: 0,
+                    fee_id: null,
+                    status: null,
+                    paid_date: null
+                };
+            }
+            
+            this.fees[studentId][monthKey].tf_amount = amount;
+            this.fees[studentId][monthKey].amount = (this.fees[studentId][monthKey].jf_amount || 0) + amount;
+        },
+        
+        // Move to next field when Enter is pressed - DOWN to next student in same column
+        moveToNextField(event, type, studentId, month) {
+            const currentStudentIndex = this.students.findIndex(s => s.student_id === studentId);
+            
+            // Move DOWN to next student in the SAME column (JF or TF) and SAME month
+            if (currentStudentIndex < this.students.length - 1) {
+                const nextStudent = this.students[currentStudentIndex + 1];
+                const nextField = document.getElementById(`${type}_${nextStudent.student_id}_${month}`);
+                if (nextField) {
+                    nextField.focus();
+                    nextField.select();
+                }
+            } else {
+                // If last student, go to first student of next column
+                if (type === 'jf') {
+                    // From JF column to TF column, first student
+                    const firstStudent = this.students[0];
+                    const tfField = document.getElementById(`tf_${firstStudent.student_id}_${month}`);
+                    if (tfField) {
+                        tfField.focus();
+                        tfField.select();
+                    }
+                } else if (type === 'tf' && month < 12) {
+                    // From TF column to next month's JF column, first student
+                    const firstStudent = this.students[0];
+                    const nextMonthJfField = document.getElementById(`jf_${firstStudent.student_id}_${month + 1}`);
+                    if (nextMonthJfField) {
+                        nextMonthJfField.focus();
+                        nextMonthJfField.select();
+                    }
+                }
+            }
         },
         
         // Mark a fee as changed
@@ -328,14 +521,13 @@ function feeManagerNew() {
             return this.changedFees.size > 0;
         },
         
-        // Get total for a student across all months + exam_fee + other_fee
+        // Get total for a student across all months
         getStudentTotal(studentId) {
             let total = 0;
             for (let month = 1; month <= 12; month++) {
-                total += this.getFeeAmount(studentId, month);
+                total += this.getJfAmount(studentId, month);
+                total += this.getTfAmount(studentId, month);
             }
-            total += this.getExamFee(studentId);
-            total += this.getOtherFee(studentId);
             return total;
         },
         
@@ -421,6 +613,42 @@ function feeManagerNew() {
             this.students.forEach(student => {
                 total += this.getFeeAmount(student.student_id, month);
             });
+            return total;
+        },
+        
+        // Get JF total for a month across all students
+        getMonthJfTotal(month) {
+            let total = 0;
+            this.students.forEach(student => {
+                total += this.getJfAmount(student.student_id, month);
+            });
+            return total;
+        },
+        
+        // Get TF total for a month across all students
+        getMonthTfTotal(month) {
+            let total = 0;
+            this.students.forEach(student => {
+                total += this.getTfAmount(student.student_id, month);
+            });
+            return total;
+        },
+        
+        // Get yearly JF total across all students and months
+        getYearlyJfTotal() {
+            let total = 0;
+            for (let month = 1; month <= 12; month++) {
+                total += this.getMonthJfTotal(month);
+            }
+            return total;
+        },
+        
+        // Get yearly TF total across all students and months
+        getYearlyTfTotal() {
+            let total = 0;
+            for (let month = 1; month <= 12; month++) {
+                total += this.getMonthTfTotal(month);
+            }
             return total;
         },
         
@@ -528,8 +756,9 @@ function feeManagerNew() {
                         batch_id: parseInt(this.selectedBatch),
                         month: month,
                         year: parseInt(this.selectedYear),
+                        jf_amount: feeData.jf_amount || 0,
+                        tf_amount: feeData.tf_amount || 0,
                         amount: feeData.amount || 0
-                        // exam_fee and other_fee are saved separately now
                     };
                     
                     console.log(`Saving monthly fee:`, payload);
